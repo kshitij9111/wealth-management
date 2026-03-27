@@ -1,0 +1,9 @@
+{
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "framework": null,
+  "rewrites": [
+    { "source": "/mofsl", "destination": "/Wealth_Platform_Dashboard.html" },
+    { "source": "/comparison", "destination": "/Wealth_Platform_Comparison.html" }
+  ]
+}
