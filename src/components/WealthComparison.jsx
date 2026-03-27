@@ -56,11 +56,11 @@ const cm = [
   {fy:"FY26E",mRev:787,nAS:701,nCM:637,nTotal:1338,mPAT:348,nPBT:833},
 ];
 
-// ARR AUM, Lending, Retention
+// ARR AUM, Lending, Retention — retention computed on ex-lending AUM
 const arrAUM = [
-  {fy:"FY24",mAvg:37726,mLend:5612,mExL:32114,mRev:1065,mRet:2.82,tAvg:108609,tLend:5899,tExL:102710,tRev:844,tRet:0.78,nPvt:29224,nLoan:4925,nPvtRev:297,nPvtRet:1.02},
-  {fy:"FY25",mAvg:51952,mLend:7287,mExL:44665,mRev:1399,mRet:2.69,tAvg:150110,tLend:7602,tExL:142508,tRev:1101,tRet:0.73,nPvt:40261,nLoan:4719,nPvtRev:340,nPvtRet:0.84},
-  {fy:"FY26E",mAvg:67448,mLend:8461,mExL:58987,mRev:1671,mRet:2.48,tAvg:192358,tLend:9564,tExL:182794,tRev:1482,tRet:0.77,nPvt:49570,nLoan:6979,nPvtRev:421,nPvtRet:0.85},
+  {fy:"FY24",mAvg:37726,mLend:5612,mExL:32114,mRev:1065,mRet:3.32,tAvg:108609,tLend:5899,tExL:102710,tRev:844,tRet:0.82,nPvt:29224,nLoan:4925,nExL:24299,nPvtRev:297,nPvtRet:1.22},
+  {fy:"FY25",mAvg:51952,mLend:7287,mExL:44665,mRev:1399,mRet:3.13,tAvg:150110,tLend:7602,tExL:142508,tRev:1101,tRet:0.77,nPvt:40261,nLoan:4719,nExL:35542,nPvtRev:340,nPvtRet:0.96},
+  {fy:"FY26E",mAvg:67448,mLend:8461,mExL:58987,mRev:1671,mRet:2.83,tAvg:192358,tLend:9564,tExL:182794,tRev:1482,tRet:0.81,nPvt:49570,nLoan:6979,nExL:42591,nPvtRev:421,nPvtRet:0.99},
 ];
 
 // Yields & Flows (FY25)
@@ -179,9 +179,9 @@ const ARRTab=()=>{
     <KPI label="MOFSL Wealth ARR%" value={`${arrPct[2].mPct}%`} sub={`₹${fmt(wth[2].mARR,0)} Cr`} color={MC}/>
     <KPI label="Nuvama Wealth ARR%" value={`${arrPct[2].nPct}%`} sub={`₹${fmt(wth[2].nARR,0)} Cr`} color={NC}/>
     <KPI label="360ONE Wealth ARR%" value={`${arrPct[2].tPct}%`} sub={`₹${fmt(wth[2].tARR,0)} Cr`} color={TC}/>
-    <KPI label="MOFSL ARR Ret." value={`${arrAUM[2].mRet}%`} sub={`on ₹${fmt(arrAUM[2].mAvg,0)} Cr`} color={MC}/>
-    <KPI label="360ONE ARR Ret." value={`${arrAUM[2].tRet}%`} sub={`on ₹${fmt(arrAUM[2].tAvg/1000,0)}K Cr`} color={TC}/>
-    <KPI label="Nuvama Pvt Ret." value={`${arrAUM[2].nPvtRet}%`} sub={`on ₹${fmt(arrAUM[2].nPvt,0)} Cr`} color={NC}/>
+    <KPI label="MOFSL ARR Ret." value={`${arrAUM[2].mRet}%`} sub={`on ₹${fmt(arrAUM[2].mExL,0)} Cr ex-lend`} color={MC}/>
+    <KPI label="360ONE ARR Ret." value={`${arrAUM[2].tRet}%`} sub={`on ₹${fmt(arrAUM[2].tExL/1000,0)}K Cr ex-lend`} color={TC}/>
+    <KPI label="Nuvama Pvt Ret." value={`${arrAUM[2].nPvtRet}%`} sub={`on ₹${fmt(arrAUM[2].nExL,0)} Cr ex-lend`} color={NC}/>
   </div>
 
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -189,9 +189,9 @@ const ARRTab=()=>{
     <Card><CT>ARR Retention / Take Rate (%)</CT><CW><ComposedChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[0,3.5]}/>{T}{L}<Line dataKey="mRet" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tRet" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPvtRet" name="Nuvama Pvt" stroke={NC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
   </div>
 
-  <Sec title="ARR AUM, Lending Book & Retention" sub="Avg ARR AUM from databooks; Retention = ARR Revenue ÷ Avg ARR AUM">
+  <Sec title="ARR AUM, Lending Book & Retention" sub="ARR AUM excludes lending book; Retention = ARR Revenue ÷ ARR AUM ex-Lending">
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card><CT>Avg ARR AUM (₹ Cr)</CT><CW><BarChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mAvg" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="tAvg" name="360 ONE" fill={TC} radius={[3,3,0,0]}/><Bar dataKey="nPvt" name="Nuvama Pvt" fill={NC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+      <Card><CT>Avg ARR AUM ex-Lending (₹ Cr)</CT><CW><BarChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mExL" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="tExL" name="360 ONE" fill={TC} radius={[3,3,0,0]}/><Bar dataKey="nExL" name="Nuvama Pvt" fill={NC} radius={[3,3,0,0]}/></BarChart></CW></Card>
       <Card><CT>Lending Book within ARR AUM (₹ Cr)</CT><CW><BarChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mLend" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="tLend" name="360 ONE" fill={TC} radius={[3,3,0,0]}/><Bar dataKey="nLoan" name="Nuvama (consol)" fill={NC} radius={[3,3,0,0]}/></BarChart></CW></Card>
     </div>
     <Card><div className="overflow-x-auto"><table className="w-full text-xs">
@@ -203,9 +203,9 @@ const ARRTab=()=>{
       </tr>
       <tr className="border-b border-gray-200 text-gray-500"><th className={tl}></th>{["FY24","FY25","FY26E","FY24","FY25","FY26E","FY24","FY25","FY26E"].map((f,i)=><th key={i} className={tc}>{f}</th>)}</tr></thead>
       <tbody>
-        <tr className="border-b border-gray-50 bg-gray-50/30"><td className={tl+" font-semibold"}>Avg ARR AUM</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-semibold"} style={{color:MC}}>{fmt(r.mAvg,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-semibold"} style={{color:TC}}>{fmt(r.tAvg,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" font-semibold"} style={{color:NC}}>{fmt(r.nPvt,0)}</td>)}</tr>
+        <tr className="border-b border-gray-50 bg-gray-50/30"><td className={tl+" font-semibold"}>Total ARR AUM (incl. Lending)</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" text-gray-400"}>{fmt(r.mAvg,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" text-gray-400"}>{fmt(r.tAvg,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" text-gray-400"}>{fmt(r.nPvt,0)}</td>)}</tr>
         <tr className="border-b border-gray-50"><td className={tl}>Lending Book</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc}>{fmt(r.mLend,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc}>{fmt(r.tLend,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc}>{fmt(r.nLoan,0)}</td>)}</tr>
-        <tr className="border-b border-gray-50"><td className={tl}>ARR AUM ex-Lending</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-semibold"}>{fmt(r.mExL,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-semibold"}>{fmt(r.tExL,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" text-gray-400"}>—</td>)}</tr>
+        <tr className="border-b border-gray-50 bg-blue-50/30"><td className={tl+" font-semibold"}>ARR AUM ex-Lending</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-semibold"} style={{color:MC}}>{fmt(r.mExL,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-semibold"} style={{color:TC}}>{fmt(r.tExL,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" font-semibold"} style={{color:NC}}>{fmt(r.nExL,0)}</td>)}</tr>
         <tr className="border-b border-gray-50 bg-purple-50/30"><td className={tl+" font-semibold"}>ARR Revenue</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-bold"} style={{color:AR}}>{fmt(r.mRev,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-bold"} style={{color:AR}}>{fmt(r.tRev,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" font-bold"} style={{color:AR}}>{fmt(r.nPvtRev,0)}</td>)}</tr>
         <tr className="border-b border-gray-50 bg-amber-50/30"><td className={tl+" font-semibold"}>Retention (%)</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-bold"} style={{color:MC}}>{r.mRet}%</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-bold"} style={{color:TC}}>{r.tRet}%</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" font-bold"} style={{color:NC}}>{r.nPvtRet}%</td>)}</tr>
       </tbody>
@@ -245,7 +245,7 @@ const ScoreTab=()=>{
     ]},
     {cat:"ARR Quality",items:[
       {l:"Total ARR (W+AM)",m:fmt(mAR,0),n:fmt(nAR,0),t:fmt(tAR,0)},
-      {l:"Avg ARR AUM",m:fmt(arrAUM[2].mAvg,0),n:`${fmt(arrAUM[2].nPvt,0)} (Pvt)`,t:fmt(arrAUM[2].tAvg,0)},
+      {l:"ARR AUM ex-Lending",m:fmt(arrAUM[2].mExL,0),n:`${fmt(arrAUM[2].nExL,0)} (Pvt)`,t:fmt(arrAUM[2].tExL,0)},
       {l:"ARR Retention",m:`${arrAUM[2].mRet}%`,n:`${arrAUM[2].nPvtRet}% (Pvt)`,t:`${arrAUM[2].tRet}%`},
       {l:"Mcap / Total ARR",m:`${(val.mMc/mAR).toFixed(1)}x`,n:`${(val.nMc/nAR).toFixed(1)}x`,t:`${(val.tMc/tAR).toFixed(1)}x`},
     ]},
