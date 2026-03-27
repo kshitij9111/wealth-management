@@ -1,10 +1,9 @@
 {
-  "buildCommand": null,
-  "installCommand": null,
-  "outputDirectory": ".",
-  "framework": null,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "rewrites": [
-    { "source": "/mofsl", "destination": "/Wealth_Platform_Dashboard.html" },
-    { "source": "/comparison", "destination": "/Wealth_Platform_Comparison.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

@@ -1,47 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tusk Investment Research — Wealth Dashboards</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#f1f5f9;min-height:100vh;display:flex;flex-direction:column}
-    header{background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:48px 32px 40px;text-align:center;border-bottom:1px solid #1e293b}
-    header h1{font-size:2rem;font-weight:800;letter-spacing:-0.02em;color:#f1f5f9}
-    header p{margin-top:8px;color:#94a3b8;font-size:0.95rem}
-    main{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px}
-    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;max-width:800px;width:100%}
-    .card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:32px;text-decoration:none;color:inherit;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s;display:block}
-    .card:hover{transform:translateY(-4px);border-color:#3b82f6;box-shadow:0 8px 32px rgba(59,130,246,0.15)}
-    .card-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#3b82f6;margin-bottom:12px}
-    .card h2{font-size:1.25rem;font-weight:700;color:#f1f5f9;margin-bottom:8px}
-    .card p{font-size:0.875rem;color:#94a3b8;line-height:1.6}
-    .card-arrow{margin-top:20px;font-size:1.25rem;color:#3b82f6}
-    footer{text-align:center;padding:24px;color:#475569;font-size:0.8rem;border-top:1px solid #1e293b}
-  </style>
 </head>
 <body>
-  <header>
-    <h1>Tusk Investment Research</h1>
-    <p>Wealth Platform Analytics — Q3 FY2026</p>
-  </header>
-  <main>
-    <div class="cards">
-      <a class="card" href="/mofsl">
-        <div class="card-tag">Deep Dive</div>
-        <h2>MOFSL Q3FY26 Dashboard</h2>
-        <p>8-tab analysis: WM, CM, AMC, PWM, HFC, Treasury, Revenue Streams &amp; SOTP Valuation. 11 quarters + FY28E forecasts.</p>
-        <div class="card-arrow">→</div>
-      </a>
-      <a class="card" href="/comparison">
-        <div class="card-tag">Comparative</div>
-        <h2>Wealth Platform Comparison</h2>
-        <p>MOFSL vs Nuvama vs 360 ONE — ARR/TBR mix, AUM, ROE, broking exposure and valuation multiples.</p>
-        <div class="card-arrow">→</div>
-      </a>
-    </div>
-  </main>
-  <footer>Tusk Investment Limited · Confidential · Q3 FY2026</footer>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
