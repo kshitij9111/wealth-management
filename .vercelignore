@@ -1,0 +1,14 @@
+*.pdf
+*.xlsx
+*.xls
+*.png
+*.jpg
+*.jpeg
+*.csv
+node_modules/
+dist/
+.DS_Store
+*.local
+COMPRESSION_SUMMARY.txt
+CLAUDE.md
+.claude/
