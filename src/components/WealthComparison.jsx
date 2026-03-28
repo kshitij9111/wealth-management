@@ -1,5 +1,5 @@
 import { useState, Fragment } from "react";
-import { BarChart, Bar, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 
 const MC="#3b82f6",NC="#a855f7",TC="#22c55e",M2="#93c5fd",N2="#d8b4fe",T2="#86efac";
 const AR="#8b5cf6",TB="#f59e0b",OC="#94a3b8";
@@ -215,6 +215,84 @@ const ARRTab=()=>{
   <Card className="bg-amber-50/50 border-amber-100"><p className="text-xs text-gray-600"><strong>Notes:</strong> MOFSL retention ~2.5-2.8% reflects higher-yielding dist trail + lending NII on smaller ARR AUM base (₹67K Cr). 360ONE at ~0.75% on ₹1.9L Cr — reflects lower-yield advisory/dist model on much larger managed assets. Nuvama only reports ARR AUM for Private segment. Lending book is embedded in ARR AUM for all — "ex-Lending" shows pure fee-earning managed/distribution AUM.</p></Card>
 </div>};
 
+// ═══ REVENUE BRIDGE / WATERFALL TAB ═══
+const WaterfallTab = () => {
+  const WFC={arr:"#8b5cf6",nii:"#06b6d4",tbr:"#f59e0b",oth:"#94a3b8",tot:"#1e40af"};
+  const buildWF=segs=>{let c=0;const r=segs.map(s=>{const row={...s,off:c};c+=s.val;return row;});r.push({name:"Total",val:c,off:0,color:WFC.tot});return r;};
+  const mWF=buildWF([{name:"Dist Trail (ARR)",val:wComp[2].mDist,color:WFC.arr},{name:"NII / Spread",val:wComp[2].mNII,color:WFC.nii},{name:"Brokerage (TBR)",val:wComp[2].mBrok,color:WFC.tbr},{name:"Other",val:wComp[2].mOth,color:WFC.oth}]);
+  const nWF=buildWF([{name:"Mgd Prod (ARR)",val:wComp[2].nMgd,color:WFC.arr},{name:"NII / Spread",val:wComp[2].nNII,color:WFC.nii},{name:"Broking+Trans (TBR)",val:wComp[2].nBrok,color:WFC.tbr},{name:"Other",val:wComp[2].nOth,color:WFC.oth}]);
+  const tWF=buildWF([{name:"ARR (Plus+Dist+NII)",val:wComp[2].tARR,color:WFC.arr},{name:"TBR / Brokerage",val:wComp[2].tBrok,color:WFC.tbr},{name:"Other Income",val:wComp[2].tOth,color:WFC.oth}]);
+  const WF=({data,title})=><Card><CT>{title}</CT><CW h={300}><BarChart data={data} barSize={52} margin={{bottom:50}}>{G}<XAxis dataKey="name" tick={{fontSize:9}} angle={-28} textAnchor="end" interval={0} height={65}/><YAxis {...yL}/>{T}<Bar dataKey="off" stackId="a" fill="transparent" legendType="none"/><Bar dataKey="val" stackId="a" name="₹ Cr" radius={[3,3,0,0]}>{data.map((d,i)=><Cell key={i} fill={d.color}/>)}</Bar></BarChart></CW></Card>;
+  const niiD=wComp.map(w=>({fy:w.fy,mNII:w.mNII,nNII:w.nNII}));
+  const tbrD=wComp.map(w=>({fy:w.fy,mBrok:w.mBrok,nBrok:w.nBrok,tBrok:w.tBrok}));
+  const arrD=wComp.map(w=>({fy:w.fy,mDist:w.mDist,nMgd:w.nMgd,tARR:w.tARR}));
+  const othD=wComp.map(w=>({fy:w.fy,mOth:w.mOth,nOth:w.nOth,tOth:w.tOth}));
+  return<div className="space-y-6">
+    <Sec title="Revenue Bridge — FY26E Wealth Segment" sub="Waterfall from zero to total; each bar = incremental revenue layer (₹ Cr)">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4"><WF data={mWF} title="MOFSL (WM + PWM)"/><WF data={nWF} title="Nuvama (Wealth + Private)"/><WF data={tWF} title="360 ONE Wealth"/></div>
+      <Card className="mt-3 bg-slate-50/60 border-slate-200"><div className="flex flex-wrap gap-5 text-xs text-gray-600 py-1">{[[`ARR / Distribution trail / Managed product fees`,WFC.arr],[`NII / Spread / Interest income (lending book)`,WFC.nii],[`TBR / Brokerage — transaction-based, market-linked`,WFC.tbr],[`Other income — Delphi, PMS advisory, misc`,WFC.oth],[`Total revenue`,WFC.tot]].map(([l,c])=><span key={c}><span className="inline-block w-3 h-3 rounded mr-1 align-middle" style={{background:c}}></span>{l}</span>)}</div></Card>
+    </Sec>
+
+    <Sec title="① ARR Revenue — Distribution Trail & Managed Product Fees" sub="Recurring AUM-linked income; Retention = ARR Rev ÷ ARR AUM ex-Lending">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+        <KPI label="MOFSL Dist ARR" value={`₹${fmt(wComp[2].mDist,0)} Cr`} sub={`${(wComp[2].mDist/wth[2].mRev*100).toFixed(0)}% wealth rev`} color={MC}/>
+        <KPI label="MOFSL ARR AUM" value={`₹${fmt(arrAUM[2].mExL,0)} Cr`} sub={`ex-lend; ret ${arrAUM[2].mRet}%`} color={MC}/>
+        <KPI label="360ONE ARR Rev" value={`₹${fmt(wComp[2].tARR,0)} Cr`} sub={`${(wComp[2].tARR/wth[2].tRev*100).toFixed(0)}% wealth rev`} color={TC}/>
+        <KPI label="360ONE ARR AUM" value={`₹${fmt(arrAUM[2].tExL/1000,1)}K Cr`} sub={`ex-lend; ret ${arrAUM[2].tRet}%`} color={TC}/>
+        <KPI label="Nuvama Mgd Prod" value={`₹${fmt(wComp[2].nMgd,0)} Cr`} sub={`${(wComp[2].nMgd/wth[2].nRev*100).toFixed(0)}% wealth rev`} color={NC}/>
+        <KPI label="Nuvama Pvt AUM" value={`₹${fmt(arrAUM[2].nExL,0)} Cr`} sub={`ex-lend; ret ${arrAUM[2].nPvtRet}%`} color={NC}/>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card><CT>ARR / Distribution Revenue (₹ Cr)</CT><CW h={240}><BarChart data={arrD}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mDist" name="MOFSL Dist Trail" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="nMgd" name="Nuvama Mgd Prod" fill={NC} radius={[3,3,0,0]}/><Bar dataKey="tARR" name="360ONE ARR" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+        <Card><CT>ARR Retention Rate — Dist Rev ÷ ARR AUM ex-Lend (%)</CT><CW h={240}><ComposedChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[0,4]}/>{T}{L}<Line dataKey="mRet" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tRet" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPvtRet" name="Nuvama Pvt" stroke={NC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
+      </div>
+      <Card className="bg-purple-50/50 border-purple-100"><p className="text-xs text-gray-600"><strong>ARR context:</strong> MOFSL (₹948 Cr dist trail) on ₹58,987 Cr ARR AUM — yield declining as AUM scale outpaces trail rate compression (3.32%→2.83%). 360ONE (₹1,482 Cr ARR) on ₹1.83L Cr ARR AUM (~0.81% retention) — advisory/Plus-series, very high AUM but low take rate; ARR bundles distribution, Plus-product fees and NII (not separately reported). Nuvama Managed Products (₹850 Cr) = MPIS + Private Mgd Products on ₹42,591 Cr — ~0.99% retention improving.</p></Card>
+    </Sec>
+
+    <Sec title="② TBR / Brokerage Revenue" sub="Transaction-based, equity market-linked — lower-quality, cyclical">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+        <KPI label="MOFSL Brokerage" value={`₹${fmt(wComp[2].mBrok,0)} Cr`} sub={`${(wComp[2].mBrok/wth[2].mRev*100).toFixed(0)}% of wealth rev`} trend="down" color={MC}/>
+        <KPI label="MOFSL Brok YoY" value={yoy(wComp[2].mBrok,wComp[1].mBrok)} sub="FY25→FY26E" trend="down" color={MC}/>
+        <KPI label="Nuvama Broking" value={`₹${fmt(wComp[2].nBrok,0)} Cr`} sub={`${(wComp[2].nBrok/wth[2].nRev*100).toFixed(0)}% of wealth rev`} color={NC}/>
+        <KPI label="Nuvama Brok YoY" value={yoy(wComp[2].nBrok,wComp[1].nBrok)} sub="FY25→FY26E" color={NC}/>
+        <KPI label="360ONE TBR" value={`₹${fmt(wComp[2].tBrok,0)} Cr`} sub={`${(wComp[2].tBrok/wth[2].tRev*100).toFixed(0)}% of wealth rev`} color={TC}/>
+        <KPI label="MOFSL TBR shift" value={`${brokPct[0].mPct}% → ${brokPct[2].mPct}%`} sub="FY24→FY26E (structural ↓)" trend="down" color={MC}/>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card><CT>Brokerage / TBR Revenue (₹ Cr)</CT><CW h={240}><BarChart data={tbrD}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mBrok" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="nBrok" name="Nuvama" fill={NC} radius={[3,3,0,0]}/><Bar dataKey="tBrok" name="360 ONE" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+        <Card><CT>TBR as % of Wealth Revenue (%)</CT><CW h={240}><ComposedChart data={brokPct}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[0,55]}/>{T}{L}<Line dataKey="mPct" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPct" name="Nuvama" stroke={NC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tPct" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
+      </div>
+      <Card className="bg-amber-50/50 border-amber-100"><p className="text-xs text-gray-600"><strong>TBR context:</strong> MOFSL: Retail brokerage declining as % (44%→30% FY24→FY26E) — structural re-rating catalyst as ARR mix grows. Large retail franchise; est. ADTO ~₹600–700 Cr/day across WM+CM, ~1.5% retail equity market share. Nuvama TBR: HNI/ultra-HNI brokerage + transactional advisory (~24% of wealth rev), stable. 360ONE TBR (~31%): primarily HNI transactional/advisory execution; company targeting further ARR shift. All three are seeing market-share pressure from Zerodha/Groww in retail broking.</p></Card>
+    </Sec>
+
+    <Sec title="③ NII / Interest Income — Lending Spread" sub="Margin lending, ESOP financing, LAS; lending book embedded within ARR AUM">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+        <KPI label="MOFSL NII" value={`₹${fmt(wComp[2].mNII,0)} Cr`} sub={`${(wComp[2].mNII/wth[2].mRev*100).toFixed(0)}% wealth rev`} color={MC}/>
+        <KPI label="MOFSL Lend Book" value={`₹${fmt(arrAUM[2].mLend,0)} Cr`} sub={`Yield ~${(wComp[2].mNII/arrAUM[2].mLend*100).toFixed(1)}% on book`} color={MC}/>
+        <KPI label="Nuvama NII" value={`₹${fmt(wComp[2].nNII,0)} Cr`} sub={`${(wComp[2].nNII/wth[2].nRev*100).toFixed(0)}% wealth rev`} color={NC}/>
+        <KPI label="Nuvama Lend Book" value={`₹${fmt(arrAUM[2].nLoan,0)} Cr`} sub={`~${(wComp[2].nNII/arrAUM[2].nLoan*100).toFixed(1)}% NII/book`} color={NC}/>
+        <KPI label="360ONE Lend Book" value={`₹${fmt(arrAUM[2].tLend,0)} Cr`} sub="NII bundled in ARR" color={TC}/>
+        <KPI label="MOFSL NII YoY" value={yoy(wComp[2].mNII,wComp[1].mNII)} sub="FY25→FY26E" trend="up" color={MC}/>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card><CT>NII / Interest Income Trend (₹ Cr)</CT><CW h={240}><BarChart data={niiD}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mNII" name="MOFSL NII" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="nNII" name="Nuvama NII" fill={NC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+        <Card><CT>Lending Book (₹ Cr)</CT><CW h={240}><BarChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mLend" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="tLend" name="360 ONE" fill={TC} radius={[3,3,0,0]}/><Bar dataKey="nLoan" name="Nuvama" fill={NC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+      </div>
+      <Card className="bg-cyan-50/50 border-cyan-100"><p className="text-xs text-gray-600"><strong>NII context:</strong> MOFSL NII (₹1,253 Cr) = margin lending + ESOP financing on ₹8,461 Cr book — gross yield ~14.8% (high-yield secured against equity). Nuvama NII (₹293 Cr) on ₹6,979 Cr consol. loan book — ~4.2% reflects blended rate on structured/lower-yield lending mix. 360ONE does not separately report NII — lending income (₹9,564 Cr book) is bundled inside ARR, making it the largest lending book of the three but invisibly embedded in ARR numbers. NII is high-quality recurring income that grows with AUM.</p></Card>
+    </Sec>
+
+    <Sec title="④ Other Income" sub="Advisory platform fees, PMS management, Delphi, structured products distribution, misc">
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <KPI label="MOFSL Other" value={`₹${fmt(wComp[2].mOth,0)} Cr`} sub="Delphi + PMS advisory fees" color={MC}/>
+        <KPI label="Nuvama Other" value={`₹${fmt(wComp[2].nOth,0)} Cr`} sub="GIFT City + Private misc" color={NC}/>
+        <KPI label="360ONE Other" value={`₹${fmt(wComp[2].tOth,0)} Cr`} sub="Structured + tech / misc fees" color={TC}/>
+      </div>
+      <Card><CT>Other Income Trend (₹ Cr)</CT><CW h={220}><BarChart data={othD}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mOth" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="nOth" name="Nuvama" fill={NC} radius={[3,3,0,0]}/><Bar dataKey="tOth" name="360 ONE" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+      <Card className="bg-gray-50/50 border-gray-200 mt-3"><p className="text-xs text-gray-600"><strong>Other income breakdown:</strong> MOFSL (₹143 Cr): Delphi advisory platform fees (HNI digital advisory) + PMS management fees routed through WM/PWM. Nuvama (₹119 Cr): GIFT City operations + custody/processing income + miscellaneous Private segment fees. 360ONE (₹135 Cr): structured products distribution fees, technology/platform fees, and miscellaneous advisory income — growing as product platform expands.</p></Card>
+    </Sec>
+  </div>;
+};
+
 // ═══ SCORECARD ═══
 const ScoreTab=()=>{
   const tc="py-2 px-2 text-right",tl="py-2 px-2 text-left";const hdr="bg-gray-50 font-bold text-xs uppercase text-gray-500";
@@ -285,7 +363,7 @@ const ScoreTab=()=>{
 };
 
 // ═══ MAIN ═══
-const TABS=[{id:"overview",label:"Overview"},{id:"wealth",label:"Wealth"},{id:"am",label:"Asset Mgmt"},{id:"cm",label:"Capital Mkt"},{id:"arrtbr",label:"ARR / TBR"},{id:"score",label:"Scorecard"}];
+const TABS=[{id:"overview",label:"Overview"},{id:"wealth",label:"Wealth"},{id:"am",label:"Asset Mgmt"},{id:"cm",label:"Capital Mkt"},{id:"arrtbr",label:"ARR / TBR"},{id:"revbridge",label:"Rev Bridge"},{id:"score",label:"Scorecard"}];
 export default function Dashboard(){
   const[tab,setTab]=useState("wealth");
   return<div className="min-h-screen bg-gray-50">
@@ -297,7 +375,7 @@ export default function Dashboard(){
     </div>
     <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10"><div className="max-w-7xl mx-auto px-6 flex gap-0.5 overflow-x-auto">{TABS.map(t=><button key={t.id} onClick={()=>setTab(t.id)} className={`px-4 py-3 text-sm font-semibold border-b-[3px] transition-colors whitespace-nowrap ${tab===t.id?"border-purple-600 text-purple-700 bg-purple-50/60":"border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>{t.label}</button>)}</div></div>
     <div className="max-w-7xl mx-auto px-6 py-6">
-      {tab==="overview"&&<Overview/>}{tab==="wealth"&&<WealthTab/>}{tab==="am"&&<AMTab/>}{tab==="cm"&&<CMTab/>}{tab==="arrtbr"&&<ARRTab/>}{tab==="score"&&<ScoreTab/>}
+      {tab==="overview"&&<Overview/>}{tab==="wealth"&&<WealthTab/>}{tab==="am"&&<AMTab/>}{tab==="cm"&&<CMTab/>}{tab==="arrtbr"&&<ARRTab/>}{tab==="revbridge"&&<WaterfallTab/>}{tab==="score"&&<ScoreTab/>}
     </div>
   </div>;
 }
