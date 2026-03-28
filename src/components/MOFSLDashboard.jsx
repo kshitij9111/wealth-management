@@ -88,6 +88,13 @@ const cmA = mkA(cmQD, ["grossRev","netRev","netBroking","feesIncome","nii","othe
 
 // AMC annual
 const amcA = mkA(aQ, ["grossRev","netRev","amcRev","pbt","pat","sipFlows","netFlows","mtm"], ["totalAUM","sipAUM","activeFolios","lendingBook"], ["costIncome"]);
+// ── AMC Fee Yield Analytics — SINGLE SOURCE OF TRUTH ──────────────────────
+// Both AMCTab and ValTab (SOTP) derive Retention % from these three constants.
+// Do NOT hardcode Retention in either tab; always reference amcRetPct here.
+const amcAvgAUM = (aQ[8].totalAUM + aQ[9].totalAUM + aQ[10].totalAUM) / 3; // avg Q1-Q3 FY26 ending AUM
+const amcGrossYield = +(amcA[2].grossRev / amcAvgAUM * 10000).toFixed(2);   // bps: Gross Rev ÷ Avg AUM
+const amcRetYield   = +(amcA[2].amcRev   / amcAvgAUM * 10000).toFixed(2);   // bps: AMC Fees ÷ Avg AUM
+const amcRetPct     = +(amcA[2].amcRev   / amcA[2].grossRev * 100).toFixed(2); // %: Retained ÷ Gross
 
 // HFC annual
 const hfcA = mkA(hQ, ["intIncome","intExpense","nii","otherOp","totalIncome","ppop","pbt","pat","disbursement"], ["loanBook","nw","branches"], ["yieldPct","cofPct","spreadPct","nimPct","gnplPct","crarPct","roe","costIncome","de"]);
@@ -237,6 +244,11 @@ const AMCTab = () => { const L=amcA[2],P=amcA[1]; return <div className="space-y
     <KPI label="FY26E SIP Flows" value={`₹${fmt(L.sipFlows,0)} Cr`} trend="up" color={C.teal}/>
     <KPI label="Active Folios" value={`${(L.activeFolios/1e6).toFixed(1)}mn`} trend="up" color={C.orange}/>
     <KPI label="Avg Cost/Income" value={pct(L.costIncome,0)} sub="Best-in-class" color={C.pink}/>
+  </div>
+  <div className="grid grid-cols-3 gap-3">
+    <KPI label="Gross Yield (FY26E)" value={`${amcGrossYield.toFixed(2)} bps`} sub={`Gross Rev ÷ Avg AUM · ₹${fmt(amcA[2].grossRev,0)} Cr`} color={C.accent}/>
+    <KPI label="Retained Yield (FY26E)" value={`${amcRetYield.toFixed(2)} bps`} sub={`AMC Fees ÷ Avg AUM · ₹${fmt(amcA[2].amcRev,0)} Cr`} color={C.teal}/>
+    <KPI label="Fee Retention Rate" value={`${amcRetPct.toFixed(2)}%`} sub="Retained Yield ÷ Gross Yield — matches SOTP tab" color={C.purple} trend={amcRetPct>=50?"up":"down"}/>
   </div>
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
     <Card><CT>Annual Revenue: Gross → Net → AMC Fees (₹ Cr)</CT><CW><BarChart data={amcA}>{grid}<XAxis {...xFY}/><YAxis {...yL}/>{tip}{leg}<Bar dataKey="grossRev" name="Gross Revenue" fill={C.accent} opacity={0.25} radius={[3,3,0,0]}/><Bar dataKey="netRev" name="Net Revenue" fill={C.accent} radius={[3,3,0,0]}/><Bar dataKey="amcRev" name="AMC Mgmt Fees" fill={C.teal} radius={[3,3,0,0]}/></BarChart></CW></Card>
@@ -395,7 +407,7 @@ const ValTab = () => {
           {rows.map((s,si)=><Fragment key={`vg${si}`}>
             <tr className={`border-b border-gray-200 ${hdr}`}>
               <td className={tl}>{s.stream}</td>
-              <td className="py-2 px-2"><input type="text" placeholder="e.g. ₹1.5L Cr AUM" value={s._metric} onChange={e=>upd(si,"metric",e.target.value)} className={iMet}/></td>
+              <td className="py-2 px-2">{si===3?<span className="text-xs font-semibold text-teal-700 bg-teal-50 px-2 py-1 rounded border border-teal-200 whitespace-nowrap">Gross {amcGrossYield.toFixed(2)} bps · Ret {amcRetPct.toFixed(2)}%</span>:<input type="text" placeholder="e.g. ₹1.5L Cr AUM" value={s._metric} onChange={e=>upd(si,"metric",e.target.value)} className={iMet}/>}</td>
               <td className={tc}>{fmt(s.totalAnn,0)}</td>
               <td className={tc}>{s.isCap
                 ? <span className="text-gray-400 text-xs">—</span>
@@ -412,7 +424,7 @@ const ValTab = () => {
             </tr>
             {s.subs.map((r,ri)=><tr key={`vs${si}_${ri}`} className={`border-b border-gray-50 ${sr}`}>
               <td className={tl+" pl-6 text-xs"}>{r.seg}</td>
-              <td className="py-1 px-2"><input type="text" placeholder="e.g. ₹1.5L Cr AUM" value={inp[si].subMetrics[ri]} onChange={e=>updSub(si,ri,e.target.value)} className={iMet}/></td>
+              <td className="py-1 px-2">{si===3?<span className="text-xs text-teal-600 whitespace-nowrap">Ret Yield {amcRetYield.toFixed(2)} bps · {amcRetPct.toFixed(2)}% retention</span>:<input type="text" placeholder="e.g. ₹1.5L Cr AUM" value={inp[si].subMetrics[ri]} onChange={e=>updSub(si,ri,e.target.value)} className={iMet}/>}</td>
               <td className={tc+" text-xs"}>{fmt(r.ann,0)}</td>
               <td colSpan={2}></td>
               <td className={tc+" text-xs text-gray-400"}>{(r.pct*100).toFixed(0)}%</td>
