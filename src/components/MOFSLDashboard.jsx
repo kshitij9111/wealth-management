@@ -126,7 +126,7 @@ const sr = (k,s,e) => rs.slice(s,e+1).reduce((a,r)=>a+(r[k]||0),0);
 
 const streamDetail = [
   { stream:"Net Interest Income", bear:3.5, base:5.0, bull:6.5, subs:[
-    {seg:"WM", k:"wmNII"}, {seg:"PWM", k:"pwmNII"}, {seg:"Capital Mkt", k:"cmNII"}, {seg:"HFC", k:"hfcNII"}
+    {seg:"WM", k:"wmNII"}, {seg:"PWM", k:"pwmNII"}, {seg:"Capital Mkt", k:"cmNII"}
   ]},
   { stream:"Brokerage & Trading", bear:2.5, base:3.5, bull:4.5, subs:[
     {seg:"WM", k:"wmBrok"}, {seg:"PWM", k:"pwmBrok"}, {seg:"Capital Mkt", k:"cmBrok"}
@@ -140,6 +140,7 @@ const streamDetail = [
   { stream:"Advisory / IB Fees", bear:3, base:4.5, bull:6, subs:[
     {seg:"CM IB/ECM", k:"cmAdv"}, {seg:"PWM Delphi", k:"pwmDelphi"}
   ]},
+  { stream:"Housing Finance (HFC)", bear:3.5, base:5.0, bull:7.0, directKey:"hfcNII", subs:[]},
   { stream:"Treasury / Prop Book", bear:0.5, base:0.75, bull:1.0, isCap:true, capDep:trA[2].totalInv, subs:[]},
   { stream:"Other Operating", bear:2, base:3, bull:4, subs:[
     {seg:"WM Other", k:"wmOther"}, {seg:"CM Other", k:"cmOther"}, {seg:"HFC Fees", k:"hfcOther"}, {seg:"AMC Alt/Lending", k:"amcOther"}
@@ -147,6 +148,7 @@ const streamDetail = [
 ];
 streamDetail.forEach(s => {
   if(s.isCap) { s.totalAnn = s.capDep; s.fy24=0; s.fy25=0; s.m9=0; }
+  else if(s.directKey) { const k=s.directKey; s.fy24=sr(k,0,3); s.fy25=sr(k,4,7); s.m9=sr(k,8,10); s.totalAnn=s.m9*4/3; }
   else {
     s.fy24 = s.subs.reduce((a,sub)=>a+sr(sub.k,0,3),0);
     s.fy25 = s.subs.reduce((a,sub)=>a+sr(sub.k,4,7),0);
@@ -314,12 +316,12 @@ const StreamsTab = () => { const L=rsA[2],P=rsA[1]; return <div className="space
 
 // ═══ STREAM VALUATION TAB (interactive) ═══
 const ValTab = () => {
-  const [inp, setInp] = useState(() => sVal.map(s => ({m:"0", b:String(s.bear), ba:String(s.base), bu:String(s.bull)})));
+  const [inp, setInp] = useState(() => sVal.map(s => ({m:"0", b:String(s.bear), ba:String(s.base), bu:String(s.bull), metric:""})));
   const upd = (i,f,v) => setInp(p => p.map((r,j) => j===i ? {...r,[f]:v} : r));
   const pn = v => parseFloat(v)||0;
   const rows = sVal.map((s,i) => {
     const r=inp[i], bv=s.totalAnn*pn(r.b)/SHARES, bav=s.totalAnn*pn(r.ba)/SHARES, buv=s.totalAnn*pn(r.bu)/SHARES;
-    return {...s, _m:r.m, _b:r.b, _ba:r.ba, _bu:r.bu, pat:Math.round(s.totalAnn*pn(r.m)/100), bearVal:bv, baseVal:bav, bullVal:buv};
+    return {...s, _m:r.m, _b:r.b, _ba:r.ba, _bu:r.bu, _metric:r.metric, pat:Math.round(s.totalAnn*pn(r.m)/100), bearVal:bv, baseVal:bav, bullVal:buv};
   });
   const totB=rows.reduce((a,r)=>a+r.bearVal,0), totBa=rows.reduce((a,r)=>a+r.baseVal,0), totBu=rows.reduce((a,r)=>a+r.bullVal,0);
   const iBase="text-right border rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 w-14";
@@ -327,6 +329,7 @@ const ValTab = () => {
   const iB=`${iBase} bg-red-50 border-red-200 text-red-700 focus:ring-red-400`;
   const iBa=`${iBase} bg-blue-50 border-blue-200 text-blue-700 focus:ring-blue-400`;
   const iBu=`${iBase} bg-green-50 border-green-200 text-green-700 focus:ring-green-400`;
+  const iMet="text-left border border-slate-200 bg-slate-50 rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 text-slate-700 w-36";
   const hdr="bg-blue-50/80 font-bold"; const sr="bg-white text-gray-600"; const tc="py-2 px-2 text-right"; const tl="py-2 px-2";
 
   return <div className="space-y-6">
@@ -344,10 +347,11 @@ const ValTab = () => {
       </Fragment>)}</tbody></table></div></Card>
     </Sec>
 
-    <Sec title="Revenue-Stream SOTP Valuation" sub="Edit PAT margin % and multiples — Price = FY26E Rev × Multiple ÷ 60.2 Cr shares (₹/share)">
+    <Sec title="Revenue-Stream SOTP Valuation" sub="Edit key metrics, PAT margin % and multiples — Price = FY26E Rev × Multiple ÷ 60.2 Cr shares (₹/share)">
       <Card><div className="overflow-x-auto"><table className="w-full text-sm">
         <thead><tr className="border-b-2 border-gray-800">
           <th className={tl+" font-bold"}>Stream / Segment</th>
+          <th className={tl+" text-slate-500 font-semibold"}>Key Metrics / Drivers</th>
           <th className={tc}>FY26E Rev</th>
           <th className={tc+" text-amber-600"}>PAT Margin %</th>
           <th className={tc+" text-amber-600"}>PAT</th>
@@ -363,6 +367,7 @@ const ValTab = () => {
           {rows.map((s,si)=><Fragment key={`vg${si}`}>
             <tr className={`border-b border-gray-200 ${hdr}`}>
               <td className={tl}>{s.stream}</td>
+              <td className="py-2 px-2"><input type="text" placeholder="e.g. ₹1.5L Cr AUM" value={s._metric} onChange={e=>upd(si,"metric",e.target.value)} className={iMet}/></td>
               <td className={tc}>{fmt(s.totalAnn,0)}</td>
               <td className={tc}>{s.isCap
                 ? <span className="text-gray-400 text-xs">—</span>
@@ -379,6 +384,7 @@ const ValTab = () => {
             </tr>
             {s.subs.map((r,ri)=><tr key={`vs${si}_${ri}`} className={`border-b border-gray-50 ${sr}`}>
               <td className={tl+" pl-6 text-xs"}>{r.seg}</td>
+              <td></td>
               <td className={tc+" text-xs"}>{fmt(r.ann,0)}</td>
               <td colSpan={2}></td>
               <td className={tc+" text-xs text-gray-400"}>{(r.pct*100).toFixed(0)}%</td>
@@ -389,7 +395,7 @@ const ValTab = () => {
             </tr>)}
           </Fragment>)}
           <tr className="border-t-2 border-gray-800 bg-gray-50 font-bold">
-            <td className="py-3 px-2" colSpan={8}>Total Target Price (₹/share)</td>
+            <td className="py-3 px-2" colSpan={9}>Total Target Price (₹/share)</td>
             <td className={tc+" text-red-500"}>₹{totB.toFixed(0)}</td>
             <td className={tc+" text-blue-600"}>₹{totBa.toFixed(0)}</td>
             <td className={tc+" text-green-600"}>₹{totBu.toFixed(0)}</td>
