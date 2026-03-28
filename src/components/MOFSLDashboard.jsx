@@ -312,10 +312,22 @@ const StreamsTab = () => { const L=rsA[2],P=rsA[1]; return <div className="space
   </Sec>
 </div>; };
 
-// ═══ STREAM VALUATION TAB ═══
+// ═══ STREAM VALUATION TAB (interactive) ═══
 const ValTab = () => {
-  const totB = sVal.reduce((a,s)=>a+s.bearVal,0), totBa = sVal.reduce((a,s)=>a+s.baseVal,0), totBu = sVal.reduce((a,s)=>a+s.bullVal,0);
-  const hdr = "bg-blue-50/80 font-bold"; const sub = "bg-white text-gray-600"; const tc = "py-2 px-2 text-right"; const tl = "py-2 px-2";
+  const [inp, setInp] = useState(() => sVal.map(s => ({m:"0", b:String(s.bear), ba:String(s.base), bu:String(s.bull)})));
+  const upd = (i,f,v) => setInp(p => p.map((r,j) => j===i ? {...r,[f]:v} : r));
+  const pn = v => parseFloat(v)||0;
+  const rows = sVal.map((s,i) => {
+    const r=inp[i], bv=s.totalAnn*pn(r.b)/SHARES, bav=s.totalAnn*pn(r.ba)/SHARES, buv=s.totalAnn*pn(r.bu)/SHARES;
+    return {...s, _m:r.m, _b:r.b, _ba:r.ba, _bu:r.bu, pat:Math.round(s.totalAnn*pn(r.m)/100), bearVal:bv, baseVal:bav, bullVal:buv};
+  });
+  const totB=rows.reduce((a,r)=>a+r.bearVal,0), totBa=rows.reduce((a,r)=>a+r.baseVal,0), totBu=rows.reduce((a,r)=>a+r.bullVal,0);
+  const iBase="text-right border rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 w-14";
+  const iM=`${iBase} bg-amber-50 border-amber-300 text-amber-800 focus:ring-amber-400 w-16`;
+  const iB=`${iBase} bg-red-50 border-red-200 text-red-700 focus:ring-red-400`;
+  const iBa=`${iBase} bg-blue-50 border-blue-200 text-blue-700 focus:ring-blue-400`;
+  const iBu=`${iBase} bg-green-50 border-green-200 text-green-700 focus:ring-green-400`;
+  const hdr="bg-blue-50/80 font-bold"; const sr="bg-white text-gray-600"; const tc="py-2 px-2 text-right"; const tl="py-2 px-2";
 
   return <div className="space-y-6">
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -328,15 +340,62 @@ const ValTab = () => {
     <Sec title="Revenue Stream Detail" sub="FY24 → FY25 → 9MFY26 → FY26E annualized, with segment contribution (₹ Cr)">
       <Card><div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b-2 border-gray-800"><th className={tl+" font-bold"}>Stream / Segment</th><th className={tc}>FY24</th><th className={tc}>FY25</th><th className={tc}>9MFY26</th><th className={tc+" font-bold text-blue-600"}>FY26E Ann.</th><th className={tc+" text-gray-500"}>YoY %</th><th className={tc+" text-gray-400"}>Mix %</th></tr></thead><tbody>{sVal.map((s,si)=><Fragment key={`g${si}`}>
         <tr className={`border-b border-gray-200 ${hdr}`}><td className={tl}>{s.stream}</td><td className={tc}>{s.isCap?"—":fmt(s.fy24,0)}</td><td className={tc}>{s.isCap?"—":fmt(s.fy25,0)}</td><td className={tc}>{s.isCap?"—":fmt(s.m9,0)}</td><td className={tc+" text-blue-600"}>{s.isCap?`${fmt(s.capDep,0)} (cap)`:fmt(s.totalAnn,0)}</td><td className={tc+" text-gray-500"}>{!s.isCap&&s.fy25?yoy(s.totalAnn,s.fy25):"—"}</td><td className={tc}>100%</td></tr>
-        {s.subs.map((r,ri)=><tr key={`s${si}_${ri}`} className={`border-b border-gray-50 ${sub}`}><td className={tl+" pl-6 text-xs"}>{r.seg}</td><td className={tc+" text-xs"}>{fmt(r.fy24,0)}</td><td className={tc+" text-xs"}>{fmt(r.fy25,0)}</td><td className={tc+" text-xs"}>{fmt(r.m9,0)}</td><td className={tc+" text-xs text-blue-500"}>{fmt(r.ann,0)}</td><td className={tc+" text-xs text-gray-400"}>{r.fy25?yoy(r.ann,r.fy25):"—"}</td><td className={tc+" text-xs text-gray-400"}>{(r.pct*100).toFixed(0)}%</td></tr>)}
+        {s.subs.map((r,ri)=><tr key={`s${si}_${ri}`} className={`border-b border-gray-50 ${sr}`}><td className={tl+" pl-6 text-xs"}>{r.seg}</td><td className={tc+" text-xs"}>{fmt(r.fy24,0)}</td><td className={tc+" text-xs"}>{fmt(r.fy25,0)}</td><td className={tc+" text-xs"}>{fmt(r.m9,0)}</td><td className={tc+" text-xs text-blue-500"}>{fmt(r.ann,0)}</td><td className={tc+" text-xs text-gray-400"}>{r.fy25?yoy(r.ann,r.fy25):"—"}</td><td className={tc+" text-xs text-gray-400"}>{(r.pct*100).toFixed(0)}%</td></tr>)}
       </Fragment>)}</tbody></table></div></Card>
     </Sec>
 
-    <Sec title="Revenue-Stream SOTP Valuation" sub="Revenue multiple x FY26E annualized revenue / 60.2 Cr shares = Rs/share. Segment rows show proportional value.">
-      <Card><div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b-2 border-gray-800"><th className={tl+" font-bold"}>Stream / Segment</th><th className={tc}>FY26E Rev</th><th className={tc+" text-gray-500"}>Mix</th><th className={tc+" text-red-500"}>Bear (x)</th><th className={tc+" text-blue-600"}>Base (x)</th><th className={tc+" text-green-600"}>Bull (x)</th><th className={tc+" text-red-500"}>Bear</th><th className={tc+" text-blue-600 font-semibold"}>Base</th><th className={tc+" text-green-600"}>Bull</th></tr></thead><tbody>{sVal.map((s,si)=><Fragment key={`vg${si}`}>
-        <tr className={`border-b border-gray-200 ${hdr}`}><td className={tl}>{s.stream}</td><td className={tc}>{fmt(s.totalAnn,0)}</td><td className={tc}>—</td><td className={tc+" text-red-500"}>{s.bear}x</td><td className={tc+" text-blue-600"}>{s.base}x</td><td className={tc+" text-green-600"}>{s.bull}x</td><td className={tc+" text-red-500"}>₹{s.bearVal.toFixed(0)}</td><td className={tc+" text-blue-600"}>₹{s.baseVal.toFixed(0)}</td><td className={tc+" text-green-600"}>₹{s.bullVal.toFixed(0)}</td></tr>
-        {s.subs.map((r,ri)=><tr key={`vs${si}_${ri}`} className={`border-b border-gray-50 ${sub}`}><td className={tl+" pl-6 text-xs"}>{r.seg}</td><td className={tc+" text-xs"}>{fmt(r.ann,0)}</td><td className={tc+" text-xs text-gray-400"}>{(r.pct*100).toFixed(0)}%</td><td colSpan={3}></td><td className={tc+" text-xs text-red-400"}>₹{(s.bearVal*r.pct).toFixed(0)}</td><td className={tc+" text-xs text-blue-400"}>₹{(s.baseVal*r.pct).toFixed(0)}</td><td className={tc+" text-xs text-green-400"}>₹{(s.bullVal*r.pct).toFixed(0)}</td></tr>)}
-      </Fragment>)}<tr className="border-t-2 border-gray-800 bg-gray-50 font-bold"><td className="py-3 px-2" colSpan={6}>Total Target Price (₹/share)</td><td className={tc+" text-red-500"}>₹{totB.toFixed(0)}</td><td className={tc+" text-blue-600"}>₹{totBa.toFixed(0)}</td><td className={tc+" text-green-600"}>₹{totBu.toFixed(0)}</td></tr></tbody></table></div></Card>
+    <Sec title="Revenue-Stream SOTP Valuation" sub="Edit PAT margin % and multiples — Price = FY26E Rev × Multiple ÷ 60.2 Cr shares (₹/share)">
+      <Card><div className="overflow-x-auto"><table className="w-full text-sm">
+        <thead><tr className="border-b-2 border-gray-800">
+          <th className={tl+" font-bold"}>Stream / Segment</th>
+          <th className={tc}>FY26E Rev</th>
+          <th className={tc+" text-amber-600"}>PAT Margin %</th>
+          <th className={tc+" text-amber-600"}>PAT</th>
+          <th className={tc+" text-gray-400"}>Mix</th>
+          <th className={tc+" text-red-500"}>Bear (x)</th>
+          <th className={tc+" text-blue-600"}>Base (x)</th>
+          <th className={tc+" text-green-600"}>Bull (x)</th>
+          <th className={tc+" text-red-500"}>Bear</th>
+          <th className={tc+" text-blue-600 font-semibold"}>Base</th>
+          <th className={tc+" text-green-600"}>Bull</th>
+        </tr></thead>
+        <tbody>
+          {rows.map((s,si)=><Fragment key={`vg${si}`}>
+            <tr className={`border-b border-gray-200 ${hdr}`}>
+              <td className={tl}>{s.stream}</td>
+              <td className={tc}>{fmt(s.totalAnn,0)}</td>
+              <td className={tc}>{s.isCap
+                ? <span className="text-gray-400 text-xs">—</span>
+                : <input type="number" step="1" min="0" max="100" value={s._m} onChange={e=>upd(si,"m",e.target.value)} className={iM}/>}
+              </td>
+              <td className={tc+" text-amber-700 font-semibold"}>{s.isCap?"—":fmt(s.pat,0)}</td>
+              <td className={tc}>—</td>
+              <td className={tc}><input type="number" step="0.5" min="0" value={s._b} onChange={e=>upd(si,"b",e.target.value)} className={iB}/></td>
+              <td className={tc}><input type="number" step="0.5" min="0" value={s._ba} onChange={e=>upd(si,"ba",e.target.value)} className={iBa}/></td>
+              <td className={tc}><input type="number" step="0.5" min="0" value={s._bu} onChange={e=>upd(si,"bu",e.target.value)} className={iBu}/></td>
+              <td className={tc+" text-red-500"}>₹{s.bearVal.toFixed(0)}</td>
+              <td className={tc+" text-blue-600 font-bold"}>₹{s.baseVal.toFixed(0)}</td>
+              <td className={tc+" text-green-600"}>₹{s.bullVal.toFixed(0)}</td>
+            </tr>
+            {s.subs.map((r,ri)=><tr key={`vs${si}_${ri}`} className={`border-b border-gray-50 ${sr}`}>
+              <td className={tl+" pl-6 text-xs"}>{r.seg}</td>
+              <td className={tc+" text-xs"}>{fmt(r.ann,0)}</td>
+              <td colSpan={2}></td>
+              <td className={tc+" text-xs text-gray-400"}>{(r.pct*100).toFixed(0)}%</td>
+              <td colSpan={3}></td>
+              <td className={tc+" text-xs text-red-400"}>₹{(s.bearVal*r.pct).toFixed(0)}</td>
+              <td className={tc+" text-xs text-blue-400"}>₹{(s.baseVal*r.pct).toFixed(0)}</td>
+              <td className={tc+" text-xs text-green-400"}>₹{(s.bullVal*r.pct).toFixed(0)}</td>
+            </tr>)}
+          </Fragment>)}
+          <tr className="border-t-2 border-gray-800 bg-gray-50 font-bold">
+            <td className="py-3 px-2" colSpan={8}>Total Target Price (₹/share)</td>
+            <td className={tc+" text-red-500"}>₹{totB.toFixed(0)}</td>
+            <td className={tc+" text-blue-600"}>₹{totBa.toFixed(0)}</td>
+            <td className={tc+" text-green-600"}>₹{totBu.toFixed(0)}</td>
+          </tr>
+        </tbody>
+      </table></div></Card>
     </Sec>
 
     <Sec title="Revenue Quality Analysis" sub="Recurring vs Transactional revenue mix for valuation premium">
