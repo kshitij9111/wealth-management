@@ -174,51 +174,6 @@ const CMTab=()=><div className="space-y-6">
   <Card className="bg-purple-50/50 border-purple-100"><p className="text-xs text-gray-600"><strong>Note:</strong> MOFSL CM is predominantly TBR (institutional broking + IB). Nuvama AS+CM includes Asset Services (₹701 Cr, semi-recurring custody/clearing) and Capital Markets (₹637 Cr, TBR). 360 ONE has no separate CM segment.</p></Card>
 </div>;
 
-// ═══ ARR / TBR & RETENTION TAB ═══
-const ARRTab=()=>{
-  const tc="py-2 px-2 text-right",tl="py-2 px-2 text-left";
-  const combARR=wth.map((w,i)=>{const a=am[i];const mA=w.mARR+a.mARR,nA=w.nARR+a.nARR,tA=w.tARR+a.tARR;return{fy:w.fy,mPct:+(mA/(w.mRev+a.mRev)*100).toFixed(1),nPct:+(nA/(w.nRev+a.nRev)*100).toFixed(1),tPct:+(tA/(w.tRev+a.tRev)*100).toFixed(1)}});
-  return<div className="space-y-6">
-  <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
-    <KPI label="MOFSL Wealth ARR%" value={`${arrPct[2].mPct}%`} sub={`₹${fmt(wth[2].mARR,0)} Cr`} color={MC}/>
-    <KPI label="Nuvama Wealth ARR%" value={`${arrPct[2].nPct}%`} sub={`₹${fmt(wth[2].nARR,0)} Cr`} color={NC}/>
-    <KPI label="360ONE Wealth ARR%" value={`${arrPct[2].tPct}%`} sub={`₹${fmt(wth[2].tARR,0)} Cr`} color={TC}/>
-    <KPI label="MOFSL ARR Ret." value={`${arrAUM[2].mRet}%`} sub={`on ₹${fmt(arrAUM[2].mExL,0)} Cr ex-lend`} color={MC}/>
-    <KPI label="360ONE ARR Ret." value={`${arrAUM[2].tRet}%`} sub={`on ₹${fmt(arrAUM[2].tExL/1000,0)}K Cr ex-lend`} color={TC}/>
-    <KPI label="Nuvama Pvt Ret." value={`${arrAUM[2].nPvtRet}%`} sub={`on ₹${fmt(arrAUM[2].nExL,0)} Cr ex-lend`} color={NC}/>
-  </div>
-
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Card><CT>Wealth+AM ARR % Trend</CT><CW><ComposedChart data={combARR}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[30,80]}/>{T}{L}<Line dataKey="mPct" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPct" name="Nuvama" stroke={NC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tPct" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
-    <Card><CT>ARR Retention / Take Rate (%)</CT><CW><ComposedChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[0,3.5]}/>{T}{L}<Line dataKey="mRet" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tRet" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPvtRet" name="Nuvama Pvt" stroke={NC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
-  </div>
-
-  <Sec title="ARR AUM, Lending Book & Retention" sub="ARR AUM excludes lending book; Retention = ARR Revenue ÷ ARR AUM ex-Lending">
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card><CT>Avg ARR AUM ex-Lending (₹ Cr)</CT><CW><BarChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mExL" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mExL",undefined,10000)}</Bar><Bar dataKey="tExL" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("tExL",undefined,10000)}</Bar><Bar dataKey="nExL" name="Nuvama Pvt" fill={NC} radius={[3,3,0,0]}>{bl("nExL",undefined,10000)}</Bar></BarChart></CW></Card>
-      <Card><CT>Lending Book within ARR AUM (₹ Cr)</CT><CW><BarChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mLend" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mLend",undefined,1000)}</Bar><Bar dataKey="tLend" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("tLend",undefined,1000)}</Bar><Bar dataKey="nLoan" name="Nuvama (consol)" fill={NC} radius={[3,3,0,0]}>{bl("nLoan",undefined,1000)}</Bar></BarChart></CW></Card>
-    </div>
-    <Card><div className="overflow-x-auto"><table className="w-full text-xs">
-      <thead><tr className="border-b-2 border-gray-800">
-        <th className={tl+" font-bold w-[20%]"}>Metric</th>
-        <th className={tc} style={{color:MC}} colSpan={3}>MOFSL (WM+PWM)</th>
-        <th className={tc} style={{color:TC}} colSpan={3}>360 ONE Wealth</th>
-        <th className={tc} style={{color:NC}} colSpan={3}>Nuvama (Pvt only)</th>
-      </tr>
-      <tr className="border-b border-gray-200 text-gray-500"><th className={tl}></th>{["FY24","FY25","FY26E","FY24","FY25","FY26E","FY24","FY25","FY26E"].map((f,i)=><th key={i} className={tc}>{f}</th>)}</tr></thead>
-      <tbody>
-        <tr className="border-b border-gray-50 bg-gray-50/30"><td className={tl+" font-semibold"}>Total ARR AUM (incl. Lending)</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" text-gray-400"}>{fmt(r.mAvg,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" text-gray-400"}>{fmt(r.tAvg,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" text-gray-400"}>{fmt(r.nPvt,0)}</td>)}</tr>
-        <tr className="border-b border-gray-50"><td className={tl}>Lending Book</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc}>{fmt(r.mLend,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc}>{fmt(r.tLend,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc}>{fmt(r.nLoan,0)}</td>)}</tr>
-        <tr className="border-b border-gray-50 bg-blue-50/30"><td className={tl+" font-semibold"}>ARR AUM ex-Lending</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-semibold"} style={{color:MC}}>{fmt(r.mExL,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-semibold"} style={{color:TC}}>{fmt(r.tExL,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" font-semibold"} style={{color:NC}}>{fmt(r.nExL,0)}</td>)}</tr>
-        <tr className="border-b border-gray-50 bg-purple-50/30"><td className={tl+" font-semibold"}>ARR Revenue</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-bold"} style={{color:AR}}>{fmt(r.mRev,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-bold"} style={{color:AR}}>{fmt(r.tRev,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" font-bold"} style={{color:AR}}>{fmt(r.nPvtRev,0)}</td>)}</tr>
-        <tr className="border-b border-gray-50 bg-amber-50/30"><td className={tl+" font-semibold"}>Retention (%)</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-bold"} style={{color:MC}}>{r.mRet}%</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-bold"} style={{color:TC}}>{r.tRet}%</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" font-bold"} style={{color:NC}}>{r.nPvtRet}%</td>)}</tr>
-      </tbody>
-    </table></div></Card>
-  </Sec>
-
-  <Card className="bg-amber-50/50 border-amber-100"><p className="text-xs text-gray-600"><strong>Notes:</strong> MOFSL retention ~2.5-2.8% reflects higher-yielding dist trail + lending NII on smaller ARR AUM base (₹67K Cr). 360ONE at ~0.75% on ₹1.9L Cr — reflects lower-yield advisory/dist model on much larger managed assets. Nuvama only reports ARR AUM for Private segment. Lending book is embedded in ARR AUM for all — "ex-Lending" shows pure fee-earning managed/distribution AUM.</p></Card>
-</div>};
-
 // ═══ REVENUE BRIDGE / WATERFALL TAB ═══
 const WaterfallTab = () => {
   const WFC={arr:"#8b5cf6",nii:"#06b6d4",tbr:"#f59e0b",oth:"#94a3b8",tot:"#1e40af"};
