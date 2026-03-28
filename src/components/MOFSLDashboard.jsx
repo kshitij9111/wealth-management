@@ -412,7 +412,7 @@ const ValTab = () => {
             <td className={tc+" text-green-600"}>₹{totBu.toFixed(0)}</td>
           </tr>
         </tbody>
-      </table></div></div></Card>
+      </table></div></Card>
     </Sec>
 
     <Sec title="Revenue Quality Analysis" sub="Recurring vs Transactional revenue mix for valuation premium">
