@@ -126,8 +126,8 @@ const WealthTab=()=>{const W=wth[2],aP=arrPct[2],bP=brokPct[2];return<div classN
 
   <Sec title="Yields & Flows (FY25)">
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card><CT>Revenue Yield on AUM (%)</CT><CW h={220}><BarChart data={yields}>{G}<XAxis dataKey="co" tick={{fontSize:11}}/><YAxis {...yL} unit="%"/>{T}{L}<Bar dataKey="wY" name="Wealth Yield %" fill={AR} radius={[3,3,0,0]}/></BarChart></CW></Card>
-      <Card><CT>Wealth Net Flows (₹ Cr)</CT><CW h={220}><BarChart data={flows}>{G}<XAxis dataKey="co" tick={{fontSize:11}}/><YAxis {...yL}/>{T}{L}<Bar dataKey="wF" name="Net Flows" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+      <Card><CT>Revenue Yield on AUM (%)</CT><CW h={220}><BarChart data={yields}>{G}<XAxis dataKey="co" tick={{fontSize:11}}/><YAxis {...yL} unit="%"/>{T}{L}<Bar dataKey="wY" name="Wealth Yield %" radius={[3,3,0,0]}><Cell fill={MC}/><Cell fill={NC}/><Cell fill={TC}/></Bar></BarChart></CW></Card>
+      <Card><CT>Wealth Net Flows (₹ Cr)</CT><CW h={220}><BarChart data={flows}>{G}<XAxis dataKey="co" tick={{fontSize:11}}/><YAxis {...yL}/>{T}{L}<Bar dataKey="wF" name="Net Flows" radius={[3,3,0,0]}><Cell fill={MC}/><Cell fill={NC}/><Cell fill={TC}/></Bar></BarChart></CW></Card>
     </div>
   </Sec>
 

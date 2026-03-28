@@ -1,5 +1,5 @@
 import { useState, useEffect, Fragment } from "react";
-import { BarChart, Bar, LineChart, Line, ComposedChart, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, LineChart, Line, ComposedChart, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from "recharts";
 
 const C = { accent:"#3b82f6", green:"#22c55e", red:"#ef4444", purple:"#a855f7", teal:"#14b8a6", orange:"#f97316", pink:"#ec4899", amber:"#f59e0b", slate:"#64748b", sky:"#0ea5e9", indigo:"#6366f1" };
 const SEG = [C.accent, C.green, C.purple, C.orange, C.pink, C.teal, C.amber];
@@ -342,6 +342,11 @@ const ValTab = () => {
   const iBu=`${iBase} bg-green-50 border-green-200 text-green-700 focus:ring-green-400`;
   const iMet="text-left border border-slate-200 bg-slate-50 rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 text-slate-700 w-36";
   const hdr="bg-blue-50/80 font-bold"; const sr="bg-white text-gray-600"; const tc="py-2 px-2 text-right"; const tl="py-2 px-2";
+  // ── Waterfall data (reactive to state inputs) ──
+  const SSHORT=["NII","Brokerage","Dist Trail","AMC Fees","Advisory","HFC","Treasury","Other"];
+  const SCOL=[C.teal,C.amber,C.purple,C.accent,C.indigo,C.green,C.orange,C.slate];
+  let _wc=0; const wfBase=[...rows.map((r,i)=>{const o=_wc;_wc+=r.baseVal;return{name:SSHORT[i],off:+o.toFixed(1),val:+r.baseVal.toFixed(1),color:SCOL[i]};}),{name:"Total TP",off:0,val:+totBa.toFixed(1),color:"#1e3a5f"}];
+  const scenD=rows.map((r,i)=>({name:SSHORT[i],bear:+r.bearVal.toFixed(1),base:+r.baseVal.toFixed(1),bull:+r.bullVal.toFixed(1)}));
 
   return <div className="space-y-6">
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -350,6 +355,14 @@ const ValTab = () => {
       <KPI label="Bull TP" value={`₹${totBu.toFixed(0)}`} sub="Optimistic" color={C.green}/>
       <KPI label="CMP" value={`₹${CMP}`} sub={`${((totBa/CMP-1)*100).toFixed(0)}% upside to base`} trend="up" color={C.purple}/>
     </div>
+
+    <Sec title="SOTP Value Bridge" sub="Base scenario: cumulative target price build-up per revenue stream (₹/share) — set PAT Margin % in the valuation table below to update">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2"><Card><CT>Cumulative Target Price — Base Scenario</CT><CW h={380}><BarChart data={wfBase} margin={{top:28,right:10,bottom:80,left:5}}>{grid}<XAxis dataKey="name" tick={{fontSize:11}} angle={-35} textAnchor="end" interval={0} height={85}/><YAxis {...yL} label={{value:"₹/share",angle:-90,position:"insideLeft",style:{fontSize:9,fill:"#9ca3af"}}}/>{tip}<Bar dataKey="off" stackId="a" fill="transparent" legendType="none"/><Bar dataKey="val" stackId="a" name="₹/share">{wfBase.map((d,i)=><Cell key={i} fill={d.color}/>)}<LabelList dataKey="val" position="top" formatter={v=>v>0.5?`₹${v.toFixed(0)}`:"—"} style={{fontSize:10,fontWeight:700,fill:"#374151"}}/></Bar></BarChart></CW></Card></div>
+        <Card><CT>Bear / Base / Bull per Stream (₹/share)</CT><CW h={380}><BarChart data={scenD} layout="vertical" margin={{left:55,right:25,top:5,bottom:5}}>{grid}<XAxis type="number" tick={{fontSize:9}}/><YAxis dataKey="name" type="category" tick={{fontSize:9}} width={65}/>{tip}{leg}<Bar dataKey="bear" name="Bear" fill={C.red} radius={[0,2,2,0]}/><Bar dataKey="base" name="Base" fill={C.accent} radius={[0,2,2,0]}/><Bar dataKey="bull" name="Bull" fill={C.green} radius={[0,2,2,0]}/></BarChart></CW></Card>
+      </div>
+      <Card className="mt-3 bg-slate-50/60 border-slate-200"><div className="flex flex-wrap gap-5 text-xs text-gray-600 py-1">{SSHORT.map((n,i)=><span key={n}><span className="inline-block w-3 h-3 rounded mr-1 align-middle" style={{background:SCOL[i]}}></span>{n}</span>)}<span><span className="inline-block w-3 h-3 rounded mr-1 align-middle" style={{background:"#1e3a5f"}}></span>Total TP</span></div></Card>
+    </Sec>
 
     <Sec title="Revenue Stream Detail" sub="FY24 → FY25 → 9MFY26 → FY26E annualized, with segment contribution (₹ Cr)">
       <Card><div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b-2 border-gray-800"><th className={tl+" font-bold"}>Stream / Segment</th><th className={tc}>FY24</th><th className={tc}>FY25</th><th className={tc}>9MFY26</th><th className={tc+" font-bold text-blue-600"}>FY26E Ann.</th><th className={tc+" text-gray-500"}>YoY %</th><th className={tc+" text-gray-400"}>Mix %</th></tr></thead><tbody>{sVal.map((s,si)=><Fragment key={`g${si}`}>
