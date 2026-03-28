@@ -316,8 +316,9 @@ const StreamsTab = () => { const L=rsA[2],P=rsA[1]; return <div className="space
 
 // ═══ STREAM VALUATION TAB (interactive) ═══
 const ValTab = () => {
-  const [inp, setInp] = useState(() => sVal.map(s => ({m:"0", b:String(s.bear), ba:String(s.base), bu:String(s.bull), metric:""})));
+  const [inp, setInp] = useState(() => sVal.map(s => ({m:"0", b:String(s.bear), ba:String(s.base), bu:String(s.bull), metric:"", subMetrics:s.subs.map(()=>"")})));
   const upd = (i,f,v) => setInp(p => p.map((r,j) => j===i ? {...r,[f]:v} : r));
+  const updSub = (si,ri,v) => setInp(p => p.map((r,j) => j===si ? {...r, subMetrics:r.subMetrics.map((m,k)=>k===ri?v:m)} : r));
   const pn = v => parseFloat(v)||0;
   const rows = sVal.map((s,i) => {
     const r=inp[i], bv=s.totalAnn*pn(r.b)/SHARES, bav=s.totalAnn*pn(r.ba)/SHARES, buv=s.totalAnn*pn(r.bu)/SHARES;
@@ -384,7 +385,7 @@ const ValTab = () => {
             </tr>
             {s.subs.map((r,ri)=><tr key={`vs${si}_${ri}`} className={`border-b border-gray-50 ${sr}`}>
               <td className={tl+" pl-6 text-xs"}>{r.seg}</td>
-              <td></td>
+              <td className="py-1 px-2"><input type="text" placeholder="e.g. ₹1.5L Cr AUM" value={inp[si].subMetrics[ri]} onChange={e=>updSub(si,ri,e.target.value)} className={iMet}/></td>
               <td className={tc+" text-xs"}>{fmt(r.ann,0)}</td>
               <td colSpan={2}></td>
               <td className={tc+" text-xs text-gray-400"}>{(r.pct*100).toFixed(0)}%</td>
