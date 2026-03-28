@@ -1,4 +1,4 @@
-import { useState, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { BarChart, Bar, LineChart, Line, ComposedChart, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const C = { accent:"#3b82f6", green:"#22c55e", red:"#ef4444", purple:"#a855f7", teal:"#14b8a6", orange:"#f97316", pink:"#ec4899", amber:"#f59e0b", slate:"#64748b", sky:"#0ea5e9", indigo:"#6366f1" };
@@ -315,14 +315,24 @@ const StreamsTab = () => { const L=rsA[2],P=rsA[1]; return <div className="space
 </div>; };
 
 // ═══ STREAM VALUATION TAB (interactive) ═══
+const LS_KEY = "mofsl-sotp-data";
 const ValTab = () => {
   const [inp, setInp] = useState(() => sVal.map(s => ({m:"0", b:String(s.bear), ba:String(s.base), bu:String(s.bull), metric:"", subMetrics:s.subs.map(()=>"")})));
+  const [savedOk, setSavedOk] = useState(false);
+  useEffect(() => {
+    try { const d=localStorage.getItem(LS_KEY); if(d) setInp(JSON.parse(d)); } catch {}
+  }, []);
   const upd = (i,f,v) => setInp(p => p.map((r,j) => j===i ? {...r,[f]:v} : r));
   const updSub = (si,ri,v) => setInp(p => p.map((r,j) => j===si ? {...r, subMetrics:r.subMetrics.map((m,k)=>k===ri?v:m)} : r));
+  const handleSave = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(inp)); } catch {} setSavedOk(true); setTimeout(()=>setSavedOk(false), 2000); };
   const pn = v => parseFloat(v)||0;
   const rows = sVal.map((s,i) => {
-    const r=inp[i], bv=s.totalAnn*pn(r.b)/SHARES, bav=s.totalAnn*pn(r.ba)/SHARES, buv=s.totalAnn*pn(r.bu)/SHARES;
-    return {...s, _m:r.m, _b:r.b, _ba:r.ba, _bu:r.bu, _metric:r.metric, pat:Math.round(s.totalAnn*pn(r.m)/100), bearVal:bv, baseVal:bav, bullVal:buv};
+    const r=inp[i];
+    const pat = Math.round(s.totalAnn*pn(r.m)/100);
+    // Treasury (isCap): price on capital deployed × multiple; all others: PAT × multiple
+    const base = s.isCap ? s.totalAnn : pat;
+    const bv=base*pn(r.b)/SHARES, bav=base*pn(r.ba)/SHARES, buv=base*pn(r.bu)/SHARES;
+    return {...s, _m:r.m, _b:r.b, _ba:r.ba, _bu:r.bu, _metric:r.metric, pat, bearVal:bv, baseVal:bav, bullVal:buv};
   });
   const totB=rows.reduce((a,r)=>a+r.bearVal,0), totBa=rows.reduce((a,r)=>a+r.baseVal,0), totBu=rows.reduce((a,r)=>a+r.bullVal,0);
   const iBase="text-right border rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 w-14";
@@ -348,8 +358,8 @@ const ValTab = () => {
       </Fragment>)}</tbody></table></div></Card>
     </Sec>
 
-    <Sec title="Revenue-Stream SOTP Valuation" sub="Edit key metrics, PAT margin % and multiples — Price = FY26E Rev × Multiple ÷ 60.2 Cr shares (₹/share)">
-      <Card><div className="overflow-x-auto"><table className="w-full text-sm">
+    <Sec title="Revenue-Stream SOTP Valuation" sub="Price = PAT × Multiple ÷ 60.2 Cr shares — PAT = FY26E Rev × PAT Margin % (Treasury: capital × multiple)">
+      <Card><div className="flex justify-end mb-2"><button onClick={handleSave} className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${savedOk?"bg-emerald-100 text-emerald-700 border border-emerald-300":"bg-blue-600 text-white hover:bg-blue-700"}`}>{savedOk?"✓ Saved!":"Save"}</button></div><div className="overflow-x-auto"><table className="w-full text-sm">
         <thead><tr className="border-b-2 border-gray-800">
           <th className={tl+" font-bold"}>Stream / Segment</th>
           <th className={tl+" text-slate-500 font-semibold"}>Key Metrics / Drivers</th>
@@ -402,7 +412,7 @@ const ValTab = () => {
             <td className={tc+" text-green-600"}>₹{totBu.toFixed(0)}</td>
           </tr>
         </tbody>
-      </table></div></Card>
+      </table></div></div></Card>
     </Sec>
 
     <Sec title="Revenue Quality Analysis" sub="Recurring vs Transactional revenue mix for valuation premium">
