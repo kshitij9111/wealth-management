@@ -107,7 +107,7 @@ const tA6 = [...tA, {fy:"FY26E", totalIncome:trA[2].totalIncome, pat:trA[2].pat,
 // Revenue Streams annual
 const rs = Q_.map((q,i) => ({ q,
   wmNII:wQ[i].nii, pwmNII:pQ[i].nii, cmNII:cmQD[i].nii, hfcNII:hQ[i].nii,
-  totalNII: wQ[i].nii+pQ[i].nii+cmQD[i].nii+hQ[i].nii,
+  totalNII: wQ[i].nii+pQ[i].nii+cmQD[i].nii+hQ[i].nii + (aQ[i].netRev - aQ[i].amcRev),
   wmBrok:wQ[i].brokerage, pwmBrok:pQ[i].brokerage, cmBrok:cmQD[i].netBroking,
   brok: wQ[i].brokerage+pQ[i].brokerage+cmQD[i].netBroking,
   wmDist:wQ[i].distribution, pwmDist:pQ[i].distribution,
@@ -118,8 +118,8 @@ const rs = Q_.map((q,i) => ({ q,
   totalFee: wQ[i].brokerage+pQ[i].brokerage+cmQD[i].netBroking+wQ[i].distribution+pQ[i].distribution+aQ[i].amcRev+cmQD[i].feesIncome+pQ[i].delphi,
   treasInc: tQ[i].totalIncome,
   wmOther:wQ[i].otherOp, cmOther:cmQD[i].otherOp, hfcOther:hQ[i].otherOp, amcOther:aQ[i].netRev-aQ[i].amcRev,
-  segOther: wQ[i].otherOp+cmQD[i].otherOp+(aQ[i].netRev-aQ[i].amcRev),
-  totalOther: tQ[i].totalIncome+hQ[i].otherOp+wQ[i].otherOp+cmQD[i].otherOp+(aQ[i].netRev-aQ[i].amcRev),
+  segOther: wQ[i].otherOp+cmQD[i].otherOp,
+  totalOther: tQ[i].totalIncome+hQ[i].otherOp+wQ[i].otherOp+cmQD[i].otherOp,
 }));
 
 // Revenue Streams aggregated to annual
@@ -137,7 +137,7 @@ const sr = (k,s,e) => rs.slice(s,e+1).reduce((a,r)=>a+(r[k]||0),0);
 
 const streamDetail = [
   { stream:"Net Interest Income", bear:3.5, base:5.0, bull:6.5, subs:[
-    {seg:"WM", k:"wmNII"}, {seg:"PWM", k:"pwmNII"}, {seg:"Capital Mkt", k:"cmNII"}
+    {seg:"WM", k:"wmNII"}, {seg:"PWM", k:"pwmNII"}, {seg:"Capital Mkt", k:"cmNII"}, {seg:"AMC Alt/Lending", k:"amcOther"}
   ]},
   { stream:"Brokerage & Trading", bear:2.5, base:3.5, bull:4.5, subs:[
     {seg:"WM", k:"wmBrok"}, {seg:"PWM", k:"pwmBrok"}, {seg:"Capital Mkt", k:"cmBrok"}
@@ -154,7 +154,7 @@ const streamDetail = [
   { stream:"Housing Finance (HFC)", bear:3.5, base:5.0, bull:7.0, directKey:"hfcNII", subs:[]},
   { stream:"Treasury / Prop Book", bear:0.5, base:0.75, bull:1.0, isCap:true, capDep:trA[2].totalInv, subs:[]},
   { stream:"Other Operating", bear:2, base:3, bull:4, subs:[
-    {seg:"WM Other", k:"wmOther"}, {seg:"CM Other", k:"cmOther"}, {seg:"HFC Fees", k:"hfcOther"}, {seg:"AMC Alt/Lending", k:"amcOther"}
+    {seg:"WM Other", k:"wmOther"}, {seg:"CM Other", k:"cmOther"}, {seg:"HFC Fees", k:"hfcOther"}
   ]},
 ];
 streamDetail.forEach(s => {
@@ -313,8 +313,8 @@ const StreamsTab = () => { const L=rsA[2],P=rsA[1]; return <div className="space
 
   <Sec title="Interest Income Breakdown" sub="NII by segment (₹ Cr)">
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card><CT>NII by Source (₹ Cr)</CT><CW><BarChart data={rsA}>{grid}<XAxis {...xFY}/><YAxis {...yL}/>{tip}{leg}<Bar dataKey="wmNII" name="WM" fill={C.accent} stackId="a"/><Bar dataKey="pwmNII" name="PWM" fill={C.teal} stackId="a"/><Bar dataKey="cmNII" name="Capital Mkt" fill={C.green} stackId="a"/><Bar dataKey="hfcNII" name="HFC" fill={C.orange} stackId="a"/></BarChart></CW></Card>
-      <Card><CT>NII Trend: Total & Segment Mix</CT><CW><ComposedChart data={rsA}>{grid}<XAxis {...xFY}/><YAxis {...yL}/>{tip}{leg}<Area dataKey="totalNII" name="Total NII" fill={C.accent} stroke={C.accent} fillOpacity={0.15} strokeWidth={2}/><Line dataKey="hfcNII" name="HFC NII" stroke={C.orange} strokeWidth={2} dot={{r:3}}/><Line dataKey="wmNII" name="WM NII" stroke={C.accent} strokeWidth={2} dot={{r:3}} strokeDasharray="5 5"/></ComposedChart></CW></Card>
+      <Card><CT>NII by Source (₹ Cr)</CT><CW><BarChart data={rsA}>{grid}<XAxis {...xFY}/><YAxis {...yL}/>{tip}{leg}<Bar dataKey="wmNII" name="WM" fill={C.accent} stackId="a"/><Bar dataKey="pwmNII" name="PWM" fill={C.teal} stackId="a"/><Bar dataKey="cmNII" name="Capital Mkt" fill={C.green} stackId="a"/><Bar dataKey="hfcNII" name="HFC" fill={C.orange} stackId="a"/><Bar dataKey="amcOther" name="AMC Alt/Lending" fill={C.pink} stackId="a"/></BarChart></CW></Card>
+      <Card><CT>NII Trend: Total & Segment Mix</CT><CW><ComposedChart data={rsA}>{grid}<XAxis {...xFY}/><YAxis {...yL}/>{tip}{leg}<Area dataKey="totalNII" name="Total NII" fill={C.accent} stroke={C.accent} fillOpacity={0.15} strokeWidth={2}/><Line dataKey="hfcNII" name="HFC NII" stroke={C.orange} strokeWidth={2} dot={{r:3}}/><Line dataKey="wmNII" name="WM NII" stroke={C.accent} strokeWidth={2} dot={{r:3}} strokeDasharray="5 5"/><Line dataKey="amcOther" name="AMC Alt/Lending" stroke={C.pink} strokeWidth={2} dot={{r:3}}/></ComposedChart></CW></Card>
     </div>
   </Sec>
 
