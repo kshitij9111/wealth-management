@@ -1,5 +1,7 @@
 import MOFSLDashboard from "./components/MOFSLDashboard.jsx";
 import WealthComparison from "./components/WealthComparison.jsx";
+import NuvamaDashboard from "./components/NuvamaDashboard.jsx";
+import OneWAMDashboard from "./components/OneWAMDashboard.jsx";
 
 function Home() {
   return (
@@ -14,6 +16,18 @@ function Home() {
             <div className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-3">Deep Dive</div>
             <h2 className="text-xl font-bold mb-2">MOFSL Q3FY26 Dashboard</h2>
             <p className="text-sm text-slate-400 leading-relaxed">8-tab analysis: WM, CM, AMC, PWM, HFC, Treasury, Revenue Streams &amp; SOTP Valuation. 11 quarters + FY28E forecasts.</p>
+            <div className="mt-5 text-xl text-blue-400">→</div>
+          </a>
+          <a href="/nuvama" className="block bg-slate-800 border border-slate-700 rounded-2xl p-8 no-underline text-slate-100 hover:-translate-y-1 hover:border-blue-500 transition-all duration-150">
+            <div className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-3">Deep Dive</div>
+            <h2 className="text-xl font-bold mb-2">Nuvama Wealth Dashboard</h2>
+            <p className="text-sm text-slate-400 leading-relaxed">8-segment SOTP: Asset Services, WD, PD, Capital Markets, AMC, (U)HNI Broking &amp; Lending. Blended 28.0x.</p>
+            <div className="mt-5 text-xl text-blue-400">→</div>
+          </a>
+          <a href="/onewam" className="block bg-slate-800 border border-slate-700 rounded-2xl p-8 no-underline text-slate-100 hover:-translate-y-1 hover:border-blue-500 transition-all duration-150">
+            <div className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-3">Deep Dive</div>
+            <h2 className="text-xl font-bold mb-2">360 ONE WAM Dashboard</h2>
+            <p className="text-sm text-slate-400 leading-relaxed">Core UHNI WM + AMC @ 40.0x and Capital Markets (B&amp;K) @ 18.0x. Blended 38.0x.</p>
             <div className="mt-5 text-xl text-blue-400">→</div>
           </a>
           <a href="/comparison" className="block bg-slate-800 border border-slate-700 rounded-2xl p-8 no-underline text-slate-100 hover:-translate-y-1 hover:border-blue-500 transition-all duration-150">
@@ -32,6 +46,8 @@ function Home() {
 export default function App() {
   const path = window.location.pathname;
   if (path === "/mofsl") return <MOFSLDashboard />;
+  if (path === "/nuvama") return <NuvamaDashboard />;
+  if (path === "/onewam") return <OneWAMDashboard />;
   if (path === "/comparison") return <WealthComparison />;
   return <Home />;
 }
