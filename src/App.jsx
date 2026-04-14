@@ -1,10 +1,14 @@
 import { useState } from "react";
 import MOFSLDashboard from "./components/MOFSLDashboard.jsx";
+import NuvamaDashboard from "./components/NuvamaDashboard.jsx";
+import OneWAMDashboard from "./components/OneWAMDashboard.jsx";
 import WealthComparison from "./components/WealthComparison.jsx";
 
 const VIEWS = [
-  { id: "mofsl", label: "MOFSL Q3FY26 Dashboard" },
-  { id: "comparison", label: "Wealth Platform Comparison" },
+  { id: "mofsl", label: "Motilal Oswal" },
+  { id: "nuvama", label: "Nuvama Wealth" },
+  { id: "onewam", label: "360 ONE WAM" },
+  { id: "comparison", label: "Platform Comparison" },
 ];
 
 export default function App() {
@@ -31,6 +35,8 @@ export default function App() {
         </div>
       </div>
       {view === "mofsl" && <MOFSLDashboard />}
+      {view === "nuvama" && <NuvamaDashboard />}
+      {view === "onewam" && <OneWAMDashboard />}
       {view === "comparison" && <WealthComparison />}
     </div>
   );
