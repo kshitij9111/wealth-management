@@ -435,7 +435,11 @@ const ValTab = () => {
             </tr>)}
           </Fragment>)}
           <tr className="border-t-2 border-gray-800 bg-gray-50 font-bold">
-            <td className="py-3 px-2" colSpan={9}>Total Target Price (₹/share)</td>
+            <td className="py-3 px-2" colSpan={2}>Total Target Price (₹/share)</td>
+            <td className={tc+" text-blue-600"}>{fmt(rows.reduce((a,r)=>a+(r.isCap?0:r.totalAnn),0),0)}</td>
+            <td className={tc}>—</td>
+            <td className={tc+" text-amber-700"}>{fmt(rows.reduce((a,r)=>a+r.pat,0),0)}</td>
+            <td className={tc} colSpan={4}></td>
             <td className={tc+" text-red-500"}>₹{totB.toFixed(0)}</td>
             <td className={tc+" text-blue-600"}>₹{totBa.toFixed(0)}</td>
             <td className={tc+" text-green-600"}>₹{totBu.toFixed(0)}</td>
