@@ -1,12 +1,5 @@
 {
-  "buildCommand": null,
-  "installCommand": null,
-  "outputDirectory": ".",
-  "framework": null,
   "rewrites": [
-    { "source": "/mofsl", "destination": "/Wealth_Platform_Dashboard.html" },
-    { "source": "/nuvama", "destination": "/Nuvama_Dashboard.html" },
-    { "source": "/360one", "destination": "/OneWAM_Dashboard.html" },
-    { "source": "/comparison", "destination": "/Wealth_Platform_Comparison.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
