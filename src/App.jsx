@@ -1,7 +1,7 @@
 import MOFSLDashboard from "./components/MOFSLDashboard.jsx";
-import WealthComparison from "./components/WealthComparison.jsx";
 import NuvamaDashboard from "./components/NuvamaDashboard.jsx";
 import OneWAMDashboard from "./components/OneWAMDashboard.jsx";
+import WealthComparison from "./components/WealthComparison.jsx";
 
 function Home() {
   return (

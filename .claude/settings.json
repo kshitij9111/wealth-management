@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(vercel logs:*)",
+      "Bash(ls -lh *.html)",
+      "Bash(vercel inspect:*)",
+      "mcp__claude_ai_Vercel__web_fetch_vercel_url",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://cdnjs.cloudflare.com/ajax/libs/recharts/2.12.7/Recharts.min.js\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js\")",
+      "Bash(vercel pull:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://wealth-management-qwho89ey4-kshitij9111s-projects.vercel.app/mofsl\")",
+      "Bash(curl -s \"https://wealth-management-qwho89ey4-kshitij9111s-projects.vercel.app/mofsl\")",
+      "Bash(curl -s \"https://wealth-management-js60cohra-kshitij9111s-projects.vercel.app/mofsl\")",
+      "Bash(ls -la vite.config.*)",
+      "Bash(find /Users/kshitijsaraf -name auth.json -path */vercel/*)",
+      "Bash(GIT_DIR=/dev/null vercel deploy --prod)"
+    ]
+  }
+}
