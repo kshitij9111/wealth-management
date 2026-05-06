@@ -1,11 +1,15 @@
 import { useState, Fragment } from "react";
-import { BarChart, Bar, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } from "recharts";
 
-const MC="#3b82f6",NC="#a855f7",TC="#22c55e",M2="#93c5fd",N2="#d8b4fe",T2="#86efac";
+const MC="#3b82f6",NC="#a855f7",TC="#f97316",M2="#93c5fd",N2="#d8b4fe",T2="#fed7aa";
 const AR="#8b5cf6",TB="#f59e0b",OC="#94a3b8";
 const fmt=(v,d=1)=>{if(v==null)return"—";if(Math.abs(v)>=100000)return`${(v/1000).toFixed(0)}K`;return typeof v==="number"?v.toLocaleString("en-IN",{minimumFractionDigits:d,maximumFractionDigits:d}):v};
 const pct=v=>v==null?"—":`${v.toFixed(1)}%`;
 const yoy=(c,p)=>p>0?`${((c/p-1)*100).toFixed(1)}%`:"—";
+const calcYoY=(c,p)=>(p&&p!==0)?+((c-p)/Math.abs(p)*100).toFixed(1):null;
+const calcCAGR=(end,start,yrs)=>(start>0&&end>0)?+((Math.pow(end/start,1/yrs)-1)*100).toFixed(1):null;
+const gwth=v=>v==null?"—":`${v>0?"▲ ":"▼ "}${Math.abs(v).toFixed(1)}%`;
+const bl=(k,p="inside",min=50)=><LabelList dataKey={k} position={p} fill="#fff" fontSize={9} fontWeight={600} formatter={v=>Math.abs(v||0)>=min?fmt(v,0):""}/>;
 const Tip=({active,payload,label})=>{if(!active||!payload)return null;return<div className="bg-gray-900 text-white rounded-lg px-3 py-2 text-xs shadow-xl border border-gray-700"><p className="font-bold mb-1 text-gray-300">{label}</p>{payload.map((p,i)=><p key={i} className="flex justify-between gap-6"><span style={{color:p.color}}>{p.name}</span><span className="font-semibold text-white">{fmt(p.value)}</span></p>)}</div>};
 const KPI=({label,value,sub,color=MC,trend})=><div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow"><p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{label}</p><p className="text-2xl font-extrabold mt-1" style={{color}}>{value}</p>{sub&&<p className={`text-xs mt-1 font-medium ${trend==="up"?"text-emerald-600":trend==="down"?"text-red-500":"text-gray-400"}`}>{trend==="up"?"▲ ":trend==="down"?"▼ ":""}{sub}</p>}</div>;
 const Card=({children,className=""})=><div className={`bg-white rounded-xl border border-gray-100 shadow-sm p-5 ${className}`}>{children}</div>;
@@ -14,6 +18,7 @@ const Sec=({title,sub,children})=><div className="mb-6"><div className="mb-3"><h
 const CW=({h=280,children})=><ResponsiveContainer width="100%" height={h}>{children}</ResponsiveContainer>;
 const xFY={dataKey:"fy",tick:{fontSize:11}};const yL={tick:{fontSize:10}};
 const G=<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0"/>;const L=<Legend wrapperStyle={{fontSize:10}}/>;const T=<Tooltip content={<Tip/>}/>;
+const CoLegend=()=><div className="flex items-center gap-5 px-4 py-2.5 bg-white rounded-xl border border-gray-200 shadow-sm mb-1 flex-wrap"><span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">Companies:</span>{[["MOFSL",MC],["360 ONE",TC],["Nuvama",NC]].map(([name,c])=><span key={name} className="flex items-center gap-1.5 text-sm font-semibold" style={{color:c}}><span className="w-3 h-3 rounded inline-block" style={{background:c}}/>{name}</span>)}</div>;
 
 // ━━━ DATA ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const con = [
@@ -56,11 +61,11 @@ const cm = [
   {fy:"FY26E",mRev:787,nAS:701,nCM:637,nTotal:1338,mPAT:348,nPBT:833},
 ];
 
-// ARR AUM, Lending, Retention
+// ARR AUM, Lending, Retention — retention computed on ex-lending AUM
 const arrAUM = [
-  {fy:"FY24",mAvg:37726,mLend:5612,mExL:32114,mRev:1065,mRet:2.82,tAvg:108609,tLend:5899,tExL:102710,tRev:844,tRet:0.78,nPvt:29224,nLoan:4925,nPvtRev:297,nPvtRet:1.02},
-  {fy:"FY25",mAvg:51952,mLend:7287,mExL:44665,mRev:1399,mRet:2.69,tAvg:150110,tLend:7602,tExL:142508,tRev:1101,tRet:0.73,nPvt:40261,nLoan:4719,nPvtRev:340,nPvtRet:0.84},
-  {fy:"FY26E",mAvg:67448,mLend:8461,mExL:58987,mRev:1671,mRet:2.48,tAvg:192358,tLend:9564,tExL:182794,tRev:1482,tRet:0.77,nPvt:49570,nLoan:6979,nPvtRev:421,nPvtRet:0.85},
+  {fy:"FY24",mAvg:37726,mLend:5612,mExL:32114,mRev:1065,mRet:3.32,tAvg:108609,tLend:5899,tExL:102710,tRev:844,tRet:0.82,nPvt:29224,nLoan:4925,nExL:24299,nPvtRev:297,nPvtRet:1.22},
+  {fy:"FY25",mAvg:51952,mLend:7287,mExL:44665,mRev:1399,mRet:3.13,tAvg:150110,tLend:7602,tExL:142508,tRev:1101,tRet:0.77,nPvt:40261,nLoan:4719,nExL:35542,nPvtRev:340,nPvtRet:0.96},
+  {fy:"FY26E",mAvg:67448,mLend:8461,mExL:58987,mRev:1671,mRet:2.83,tAvg:192358,tLend:9564,tExL:182794,tRev:1482,tRet:0.81,nPvt:49570,nLoan:6979,nExL:42591,nPvtRev:421,nPvtRet:0.99},
 ];
 
 // Yields & Flows (FY25)
@@ -72,148 +77,271 @@ const val={mCMP:697,nCMP:6200,tCMP:950,mSh:60.2,nSh:3.8,tSh:40.5,mMc:41959,nMc:2
 
 // ━━━ TABS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const Overview=()=>{const C=con[2],P=con[1];return<div className="space-y-6">
+const Overview=()=>{const C=con[2],P=con[1],F=con[0];return<div className="space-y-6">
   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-    <KPI label="MOFSL FY26E Rev" value={`₹${fmt(C.mRev,0)} Cr`} sub={`${yoy(C.mRev,P.mRev)} YoY`} trend="up" color={MC}/>
-    <KPI label="Nuvama FY26E Rev" value={`₹${fmt(C.nRev,0)} Cr`} sub={`${yoy(C.nRev,P.nRev)} YoY`} trend="up" color={NC}/>
-    <KPI label="360ONE FY26E Rev" value={`₹${fmt(C.tRev,0)} Cr`} sub={`${yoy(C.tRev,P.tRev)} YoY`} trend="up" color={TC}/>
-    <KPI label="MOFSL OpPAT" value={`₹${fmt(C.mOP,0)} Cr`} sub={`${yoy(C.mOP,P.mOP)} YoY`} trend="up" color={MC}/>
-    <KPI label="Nuvama OpPAT" value={`₹${fmt(C.nOP,0)} Cr`} sub={`${yoy(C.nOP,P.nOP)} YoY`} trend="up" color={NC}/>
-    <KPI label="360ONE OpPAT" value={`₹${fmt(C.tOP,0)} Cr`} sub={`${yoy(C.tOP,P.tOP)} YoY`} trend="up" color={TC}/>
+    <KPI label="MOFSL FY26E Rev" value={`₹${fmt(C.mRev,0)} Cr`} sub={`${yoy(C.mRev,P.mRev)} YoY · ${gwth(calcCAGR(C.mRev,F.mRev,2))} 2Y CAGR`} trend="up" color={MC}/>
+    <KPI label="Nuvama FY26E Rev" value={`₹${fmt(C.nRev,0)} Cr`} sub={`${yoy(C.nRev,P.nRev)} YoY · ${gwth(calcCAGR(C.nRev,F.nRev,2))} 2Y CAGR`} trend="up" color={NC}/>
+    <KPI label="360ONE FY26E Rev" value={`₹${fmt(C.tRev,0)} Cr`} sub={`${yoy(C.tRev,P.tRev)} YoY · ${gwth(calcCAGR(C.tRev,F.tRev,2))} 2Y CAGR`} trend="up" color={TC}/>
+    <KPI label="MOFSL OpPAT" value={`₹${fmt(C.mOP,0)} Cr`} sub={`${yoy(C.mOP,P.mOP)} YoY · ${gwth(calcCAGR(C.mOP,F.mOP,2))} 2Y CAGR`} trend="up" color={MC}/>
+    <KPI label="Nuvama OpPAT" value={`₹${fmt(C.nOP,0)} Cr`} sub={`${yoy(C.nOP,P.nOP)} YoY · ${gwth(calcCAGR(C.nOP,F.nOP,2))} 2Y CAGR`} trend="up" color={NC}/>
+    <KPI label="360ONE OpPAT" value={`₹${fmt(C.tOP,0)} Cr`} sub={`${yoy(C.tOP,P.tOP)} YoY · ${gwth(calcCAGR(C.tOP,F.tOP,2))} 2Y CAGR`} trend="up" color={TC}/>
   </div>
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Card><CT>Revenue (₹ Cr)</CT><CW><BarChart data={con}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mRev" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="nRev" name="Nuvama" fill={NC} radius={[3,3,0,0]}/><Bar dataKey="tRev" name="360 ONE" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
-    <Card><CT>Operating PAT (₹ Cr)</CT><CW><BarChart data={con}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mOP" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="nOP" name="Nuvama" fill={NC} radius={[3,3,0,0]}/><Bar dataKey="tOP" name="360 ONE" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+    <Card><CT>Revenue (₹ Cr)</CT><CW><BarChart data={con}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mRev" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mRev")}</Bar><Bar dataKey="nRev" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("nRev")}</Bar><Bar dataKey="tRev" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("tRev")}</Bar></BarChart></CW></Card>
+    <Card><CT>Operating PAT (₹ Cr)</CT><CW><BarChart data={con}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mOP" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mOP")}</Bar><Bar dataKey="nOP" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("nOP")}</Bar><Bar dataKey="tOP" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("tOP")}</Bar></BarChart></CW></Card>
   </div>
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Card><CT>360ONE Consolidated ARR vs TBR (₹ Cr)</CT><CW><BarChart data={con}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="tARR" name="ARR" fill={AR} stackId="t"/><Bar dataKey="tTBR" name="TBR" fill={TB} stackId="t"/><Bar dataKey="tOI" name="Other Inc" fill={OC} stackId="t" radius={[3,3,0,0]}/></BarChart></CW></Card>
+    <Card><CT>360ONE Consolidated ARR vs TBR (₹ Cr)</CT><CW><BarChart data={con}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="tARR" name="ARR" fill={AR} stackId="t">{bl("tARR",undefined,200)}</Bar><Bar dataKey="tTBR" name="TBR" fill={TB} stackId="t">{bl("tTBR",undefined,200)}</Bar><Bar dataKey="tOI" name="Other Inc" fill={OC} stackId="t" radius={[3,3,0,0]}/></BarChart></CW></Card>
     <Card><CT>ROE (%)</CT><CW><ComposedChart data={con}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%"/>{T}{L}<Line dataKey="mROE" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nROE" name="Nuvama" stroke={NC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tROE" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
   </div>
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Card><CT>Net Worth (₹ Cr)</CT><CW><BarChart data={con}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mNW" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="nNW" name="Nuvama" fill={NC} radius={[3,3,0,0]}/><Bar dataKey="tNW" name="360 ONE" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+    <Card><CT>Net Worth (₹ Cr)</CT><CW><BarChart data={con}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mNW" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mNW",undefined,500)}</Bar><Bar dataKey="nNW" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("nNW",undefined,500)}</Bar><Bar dataKey="tNW" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("tNW",undefined,500)}</Bar></BarChart></CW></Card>
     <Card><CT>Cost-to-Income (%)</CT><CW><ComposedChart data={con}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%"/>{T}{L}<Line dataKey="mCI" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nCI" name="Nuvama" stroke={NC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tCI" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
   </div>
 </div>};
 
-// ═══ WEALTH TAB — with component split ═══
-const WealthTab=()=>{const W=wth[2],aP=arrPct[2],bP=brokPct[2];return<div className="space-y-6">
+// ═══ WEALTH TAB ═══
+const WealthTab=()=>{const W=wth[2],aP=arrPct[2],bP=brokPct[2];
+  const wRevD=[
+    {m:"Total Revenue",mo:W.mRev,t:W.tRev,n:W.nRev},
+    {m:"ARR Revenue",mo:W.mARR,t:W.tARR,n:W.nARR},
+    {m:"Brokerage/TBR",mo:wComp[2].mBrok,t:wComp[2].tBrok,n:wComp[2].nBrok},
+    {m:"NII/Spread",mo:wComp[2].mNII,t:null,n:wComp[2].nNII},
+    {m:"PAT / PBT",mo:W.mPAT,t:W.tPBT,n:W.nPBT},
+  ];
+  const wAUMD=[
+    {m:"Wealth AUM",mo:+(W.mAUM/1000).toFixed(0),t:+(W.tAUM/1000).toFixed(0),n:+(W.nAUM/1000).toFixed(0)},
+    {m:"ARR AUM ex-Lend",mo:+(arrAUM[2].mExL/1000).toFixed(0),t:+(arrAUM[2].tExL/1000).toFixed(0),n:+(arrAUM[2].nExL/1000).toFixed(0)},
+    {m:"Lending Book",mo:+(arrAUM[2].mLend/1000).toFixed(1),t:+(arrAUM[2].tLend/1000).toFixed(1),n:+(arrAUM[2].nLoan/1000).toFixed(1)},
+  ];
+  const tbl=[
+    {l:"Total Revenue (₹Cr)",m:fmt(W.mRev,0),t:fmt(W.tRev,0),n:fmt(W.nRev,0)},
+    {l:"ARR Revenue (₹Cr)",m:fmt(W.mARR,0),t:fmt(W.tARR,0),n:fmt(W.nARR,0)},
+    {l:"ARR % of Revenue",m:`${aP.mPct}%`,t:`${aP.tPct}%`,n:`${aP.nPct}%`},
+    {l:"Brokerage / TBR (₹Cr)",m:fmt(wComp[2].mBrok,0),t:fmt(wComp[2].tBrok,0),n:fmt(wComp[2].nBrok,0)},
+    {l:"Broking % of Revenue",m:`${bP.mPct}%`,t:`${bP.tPct}%`,n:`${bP.nPct}%`},
+    {l:"NII / Spread (₹Cr)",m:fmt(wComp[2].mNII,0),t:"bundled in ARR",n:fmt(wComp[2].nNII,0)},
+    {l:"Wealth PAT / PBT (₹Cr)",m:fmt(W.mPAT,0),t:fmt(W.tPBT,0),n:fmt(W.nPBT,0)},
+    {l:"Wealth AUM (₹Cr)",m:fmt(W.mAUM,0),t:fmt(W.tAUM,0),n:fmt(W.nAUM,0)},
+    {l:"ARR AUM ex-Lending (₹Cr)",m:fmt(arrAUM[2].mExL,0),t:fmt(arrAUM[2].tExL,0),n:fmt(arrAUM[2].nExL,0)},
+    {l:"Lending Book (₹Cr)",m:fmt(arrAUM[2].mLend,0),t:fmt(arrAUM[2].tLend,0),n:fmt(arrAUM[2].nLoan,0)},
+    {l:"ARR Retention Rate",m:`${arrAUM[2].mRet}%`,t:`${arrAUM[2].tRet}%`,n:`${arrAUM[2].nPvtRet}%`},
+    {l:"Revenue Yield on AUM (FY25)",m:"0.89%",t:"0.45%",n:"0.53%"},
+    {l:"Net Flows FY25 (₹Cr)",m:fmt(flows[0].wF,0),t:fmt(flows[2].wF,0),n:fmt(flows[1].wF,0)},
+    {l:"Cost / Income Ratio",m:`${con[2].mCI}%`,t:`${con[2].tCI}%`,n:`${con[2].nCI}%`},
+  ];
+  const tc="py-2 px-3 text-right font-semibold text-sm",tl2="py-2 px-3 text-left text-gray-700 text-sm";
+  return<div className="space-y-6">
+  <CoLegend/>
   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
     <KPI label="MOFSL Wealth Rev" value={`₹${fmt(W.mRev,0)} Cr`} sub={`ARR ${aP.mPct}%`} color={MC}/>
-    <KPI label="Nuvama Wealth Rev" value={`₹${fmt(W.nRev,0)} Cr`} sub={`ARR ${aP.nPct}%`} color={NC}/>
     <KPI label="360ONE Wealth Rev" value={`₹${fmt(W.tRev,0)} Cr`} sub={`ARR ${aP.tPct}%`} color={TC}/>
+    <KPI label="Nuvama Wealth Rev" value={`₹${fmt(W.nRev,0)} Cr`} sub={`ARR ${aP.nPct}%`} color={NC}/>
     <KPI label="MOFSL Broking %" value={`${bP.mPct}%`} sub={`₹${fmt(wComp[2].mBrok,0)} Cr`} trend="down" color={MC}/>
-    <KPI label="Nuvama Broking %" value={`${bP.nPct}%`} sub={`₹${fmt(wComp[2].nBrok,0)} Cr`} trend="down" color={NC}/>
     <KPI label="360ONE Broking %" value={`${bP.tPct}%`} sub={`₹${fmt(wComp[2].tBrok,0)} Cr`} trend="down" color={TC}/>
+    <KPI label="Nuvama Broking %" value={`${bP.nPct}%`} sub={`₹${fmt(wComp[2].nBrok,0)} Cr`} trend="down" color={NC}/>
   </div>
-
-  <Sec title="Wealth Revenue Component Split" sub="Brokerage isolated from recurring/spread components (₹ Cr)">
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <Card><CT>MOFSL (WM+PWM)</CT><CW h={260}><BarChart data={wComp}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mNII" name="NII" fill="#06b6d4" stackId="a"/><Bar dataKey="mDist" name="Distribution" fill={AR} stackId="a"/><Bar dataKey="mBrok" name="Brokerage" fill={TB} stackId="a"/><Bar dataKey="mOth" name="Other" fill={OC} stackId="a" radius={[3,3,0,0]}/></BarChart></CW></Card>
-      <Card><CT>Nuvama (Wealth+Private)</CT><CW h={260}><BarChart data={wComp}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="nMgd" name="Managed Prod" fill={AR} stackId="a"/><Bar dataKey="nNII" name="NII" fill="#06b6d4" stackId="a"/><Bar dataKey="nBrok" name="Broking+Trans" fill={TB} stackId="a"/><Bar dataKey="nOth" name="Other" fill={OC} stackId="a" radius={[3,3,0,0]}/></BarChart></CW></Card>
-      <Card><CT>360 ONE Wealth</CT><CW h={260}><BarChart data={wComp}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="tARR" name="ARR (Plus+Dist+NII)" fill={AR} stackId="a"/><Bar dataKey="tBrok" name="TBR / Broking" fill={TB} stackId="a"/><Bar dataKey="tOth" name="Other Income" fill={OC} stackId="a" radius={[3,3,0,0]}/></BarChart></CW></Card>
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Card><CT>Revenue Breakdown by Metric — FY26E (₹ Cr)</CT><CW h={320}><BarChart data={wRevD} margin={{bottom:55}}>{G}<XAxis dataKey="m" tick={{fontSize:9}} angle={-25} textAnchor="end" interval={0} height={70}/><YAxis {...yL}/>{T}<Legend wrapperStyle={{fontSize:10}}/><Bar dataKey="mo" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mo",undefined,200)}</Bar><Bar dataKey="t" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("t",undefined,200)}</Bar><Bar dataKey="n" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("n",undefined,200)}</Bar></BarChart></CW></Card>
+    <Card><CT>AUM Comparison — FY26E (₹K Cr)</CT><CW h={320}><BarChart data={wAUMD} margin={{bottom:35}}>{G}<XAxis dataKey="m" tick={{fontSize:10}} angle={-15} textAnchor="end" interval={0} height={50}/><YAxis {...yL}/>{T}<Legend wrapperStyle={{fontSize:10}}/><Bar dataKey="mo" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mo",undefined,30)}</Bar><Bar dataKey="t" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("t",undefined,30)}</Bar><Bar dataKey="n" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("n",undefined,30)}</Bar></BarChart></CW></Card>
+  </div>
+  <Card><CT>Wealth Segment — Peer Comparison (FY26E)</CT>
+    <div className="overflow-x-auto"><table className="w-full"><thead><tr className="border-b-2 border-gray-200">
+      <th className="py-2 px-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wide w-[38%]">Metric</th>
+      <th className="py-2 px-3 text-right text-xs font-bold uppercase tracking-wide" style={{color:MC}}>MOFSL</th>
+      <th className="py-2 px-3 text-right text-xs font-bold uppercase tracking-wide" style={{color:TC}}>360 ONE</th>
+      <th className="py-2 px-3 text-right text-xs font-bold uppercase tracking-wide" style={{color:NC}}>Nuvama</th>
+    </tr></thead><tbody>
+      {tbl.map((r,i)=><tr key={i} className={`border-b border-gray-50 hover:bg-gray-50 ${i%2===0?"":"bg-gray-50/40"}`}><td className={tl2}>{r.l}</td><td className={tc} style={{color:MC}}>{r.m}</td><td className={tc} style={{color:TC}}>{r.t}</td><td className={tc} style={{color:NC}}>{r.n}</td></tr>)}
+    </tbody></table></div>
+  </Card>
+  <Sec title="Revenue Mix Trend" sub="ARR % and Brokerage % of Wealth Revenue — FY24–FY26E">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Card><CT>ARR % of Wealth Revenue</CT><CW><ComposedChart data={arrPct}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[30,80]}/>{T}{L}<Line dataKey="mPct" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tPct" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPct" name="Nuvama" stroke={NC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
+      <Card><CT>Broking as % of Wealth Revenue</CT><CW><ComposedChart data={brokPct}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[15,50]}/>{T}{L}<Line dataKey="mPct" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tPct" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPct" name="Nuvama" stroke={NC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
     </div>
   </Sec>
-
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Card><CT>Broking as % of Wealth Revenue</CT><CW><ComposedChart data={brokPct}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[15,50]}/>{T}{L}<Line dataKey="mPct" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPct" name="Nuvama" stroke={NC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tPct" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
-    <Card><CT>ARR % of Wealth Revenue</CT><CW><ComposedChart data={arrPct}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[30,80]}/>{T}{L}<Line dataKey="mPct" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPct" name="Nuvama" stroke={NC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tPct" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
-  </div>
-
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Card><CT>Wealth AUM (₹ Cr)</CT><CW><BarChart data={wth}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mAUM" name="MOFSL" fill={M2} radius={[3,3,0,0]}/><Bar dataKey="nAUM" name="Nuvama" fill={N2} radius={[3,3,0,0]}/><Bar dataKey="tAUM" name="360 ONE" fill={T2} radius={[3,3,0,0]}/></BarChart></CW></Card>
-    <Card><CT>Wealth PAT / PBT (₹ Cr)</CT><CW><BarChart data={wth}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mPAT" name="MOFSL PAT" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="nPBT" name="Nuvama PBT" fill={NC} radius={[3,3,0,0]}/><Bar dataKey="tPBT" name="360ONE PBT" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
-  </div>
-
   <Sec title="Yields & Flows (FY25)">
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card><CT>Revenue Yield on AUM (%)</CT><CW h={220}><BarChart data={yields}>{G}<XAxis dataKey="co" tick={{fontSize:11}}/><YAxis {...yL} unit="%"/>{T}{L}<Bar dataKey="wY" name="Wealth Yield %" fill={AR} radius={[3,3,0,0]}/></BarChart></CW></Card>
-      <Card><CT>Wealth Net Flows (₹ Cr)</CT><CW h={220}><BarChart data={flows}>{G}<XAxis dataKey="co" tick={{fontSize:11}}/><YAxis {...yL}/>{T}{L}<Bar dataKey="wF" name="Net Flows" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+      <Card><CT>Revenue Yield on Wealth AUM (%)</CT><CW h={220}><BarChart data={yields}>{G}<XAxis dataKey="co" tick={{fontSize:11}}/><YAxis {...yL} unit="%"/>{T}{L}<Bar dataKey="wY" name="Wealth Yield %" radius={[3,3,0,0]}><Cell fill={MC}/><Cell fill={NC}/><Cell fill={TC}/></Bar></BarChart></CW></Card>
+      <Card><CT>Wealth Net Flows (₹ Cr)</CT><CW h={220}><BarChart data={flows}>{G}<XAxis dataKey="co" tick={{fontSize:11}}/><YAxis {...yL}/>{T}{L}<Bar dataKey="wF" name="Net Flows" radius={[3,3,0,0]}><Cell fill={MC}/><Cell fill={NC}/><Cell fill={TC}/></Bar></BarChart></CW></Card>
     </div>
   </Sec>
-
-  <Card className="bg-purple-50/50 border-purple-100"><p className="text-xs text-gray-600"><strong>Component Notes:</strong> MOFSL splits into NII (margin/ESOP lending), Distribution trail, Brokerage, Other (Delphi/PMS fees). Nuvama: Managed Products = MPIS (Wealth) + Mgd Products (Private); NII = lending income; Broking = Brokerage (Wealth) + Transactional (Private). 360ONE only reports ARR vs TBR at wealth level — ARR bundles 360ONE Plus + Dist trail + Lending NII. MOFSL Broking% falling from 44%→30% FY24→FY26E is the key structural shift driving re-rating potential.</p></Card>
+  <Card className="bg-purple-50/50 border-purple-100"><p className="text-xs text-gray-600"><strong>Notes:</strong> MOFSL splits into NII (margin/ESOP lending), Distribution trail, Brokerage, Other. Nuvama: Managed Products = MPIS + Private; NII = lending income. 360ONE only reports ARR vs TBR — NII bundled inside ARR. MOFSL Broking% falling 44%→30% FY24→FY26E is the key structural re-rating catalyst.</p></Card>
 </div>};
 
 // ═══ AM TAB ═══
-const AMTab=()=>{const A=am[2];return<div className="space-y-6">
+const AMTab=()=>{const A=am[2];
+  const amRevD=[
+    {m:"AM Revenue",mo:A.mRev,t:A.tRev,n:A.nRev},
+    {m:"ARR/Mgmt Fees",mo:A.mARR,t:A.tARR,n:A.nARR},
+    {m:"PAT / PBT",mo:A.mPAT,t:A.tPBT,n:A.nPBT},
+  ];
+  const amAUMD=[{m:"AM AUM (₹K Cr)",mo:+(A.mAUM/1000).toFixed(0),t:+(A.tAUM/1000).toFixed(0),n:+(A.nAUM/1000).toFixed(1)}];
+  const tbl=[
+    {l:"AM Revenue (₹Cr)",m:fmt(A.mRev,0),t:fmt(A.tRev,0),n:fmt(A.nRev,0)},
+    {l:"ARR / Mgmt Fees (₹Cr)",m:fmt(A.mARR,0),t:fmt(A.tARR,0),n:fmt(A.nARR,0)},
+    {l:"ARR % of Revenue",m:`${(A.mARR/A.mRev*100).toFixed(0)}%`,t:`${(A.tARR/A.tRev*100).toFixed(0)}%`,n:`${(A.nARR/A.nRev*100).toFixed(0)}%`},
+    {l:"Other / Non-ARR (₹Cr)",m:fmt(A.mOth,0),t:fmt(A.tOth,0),n:fmt(A.nOth,0)},
+    {l:"AUM (₹Cr)",m:fmt(A.mAUM,0),t:fmt(A.tAUM,0),n:fmt(A.nAUM,0)},
+    {l:"PAT / PBT (₹Cr)",m:fmt(A.mPAT,0),t:fmt(A.tPBT,0),n:fmt(A.nPBT,0)},
+    {l:"PAT Margin",m:pct(A.mPAT/A.mRev*100),t:pct(A.tPBT/A.tRev*100),n:"Loss-making"},
+    {l:"AM Yield on AUM (FY25)",m:"0.94%",t:"0.80%",n:"0.65%"},
+    {l:"Net Flows FY25 (₹Cr)",m:fmt(flows[0].amF,0),t:fmt(flows[2].amF,0),n:fmt(flows[1].amF,0)},
+  ];
+  const tc="py-2 px-3 text-right font-semibold text-sm",tl2="py-2 px-3 text-left text-gray-700 text-sm";
+  return<div className="space-y-6">
+  <CoLegend/>
   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
     <KPI label="MOFSL AMC AUM" value={`₹${fmt(A.mAUM/1000,0)}K Cr`} sub="Retail MF+Alt" color={MC}/>
-    <KPI label="Nuvama AM AUM" value={`₹${fmt(A.nAUM,0)} Cr`} sub="PE/Public/RE" color={NC}/>
     <KPI label="360ONE AM AUM" value={`₹${fmt(A.tAUM/1000,0)}K Cr`} sub="PMS+AIF+MF" color={TC}/>
+    <KPI label="Nuvama AM AUM" value={`₹${fmt(A.nAUM,0)} Cr`} sub="PE/Public/RE" color={NC}/>
     <KPI label="MOFSL AMC ARR" value={`₹${fmt(A.mARR,0)} Cr`} sub={`${(A.mARR/A.mRev*100).toFixed(0)}% of rev`} color={MC}/>
-    <KPI label="Nuvama AM ARR" value={`₹${fmt(A.nARR,0)} Cr`} sub="Mgmt fees" color={NC}/>
     <KPI label="360ONE AM ARR" value={`₹${fmt(A.tARR,0)} Cr`} sub={`${(A.tARR/A.tRev*100).toFixed(0)}% of rev`} color={TC}/>
+    <KPI label="Nuvama AM ARR" value={`₹${fmt(A.nARR,0)} Cr`} sub="Mgmt fees" color={NC}/>
   </div>
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Card><CT>AM Revenue (₹ Cr)</CT><CW><BarChart data={am}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mRev" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="tRev" name="360 ONE" fill={TC} radius={[3,3,0,0]}/><Bar dataKey="nRev" name="Nuvama" fill={NC} radius={[3,3,0,0]}/></BarChart></CW></Card>
-    <Card><CT>AM ARR / Mgmt Fees (₹ Cr)</CT><CW><BarChart data={am}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mARR" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="tARR" name="360 ONE" fill={TC} radius={[3,3,0,0]}/><Bar dataKey="nARR" name="Nuvama" fill={NC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+    <Card><CT>Revenue & Fees Comparison — FY26E (₹ Cr)</CT><CW h={300}><BarChart data={amRevD} margin={{bottom:20}}>{G}<XAxis dataKey="m" tick={{fontSize:10}}/><YAxis {...yL}/>{T}<Legend wrapperStyle={{fontSize:10}}/><Bar dataKey="mo" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mo",undefined,30)}</Bar><Bar dataKey="t" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("t",undefined,30)}</Bar><Bar dataKey="n" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("n",undefined,10)}</Bar></BarChart></CW></Card>
+    <Card><CT>AM AUM Comparison — FY26E (₹K Cr)</CT><CW h={300}><BarChart data={amAUMD}>{G}<XAxis dataKey="m" tick={{fontSize:10}}/><YAxis {...yL}/>{T}<Legend wrapperStyle={{fontSize:10}}/><Bar dataKey="mo" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mo",undefined,10)}</Bar><Bar dataKey="t" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("t",undefined,10)}</Bar><Bar dataKey="n" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("n",undefined,5)}</Bar></BarChart></CW></Card>
   </div>
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Card><CT>AM AUM (₹ Cr)</CT><CW><BarChart data={am}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mAUM" name="MOFSL" fill={M2} radius={[3,3,0,0]}/><Bar dataKey="tAUM" name="360 ONE" fill={T2} radius={[3,3,0,0]}/><Bar dataKey="nAUM" name="Nuvama" fill={N2} radius={[3,3,0,0]}/></BarChart></CW></Card>
-    <Card><CT>AM Profitability (₹ Cr)</CT><CW><BarChart data={am}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mPAT" name="MOFSL PAT" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="tPBT" name="360ONE PBT" fill={TC} radius={[3,3,0,0]}/><Bar dataKey="nPBT" name="Nuvama PBT" fill={NC} radius={[3,3,0,0]}/></BarChart></CW></Card>
-  </div>
+  <Card><CT>Asset Management — Peer Comparison (FY26E)</CT>
+    <div className="overflow-x-auto"><table className="w-full"><thead><tr className="border-b-2 border-gray-200">
+      <th className="py-2 px-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wide w-[38%]">Metric</th>
+      <th className="py-2 px-3 text-right text-xs font-bold uppercase tracking-wide" style={{color:MC}}>MOFSL</th>
+      <th className="py-2 px-3 text-right text-xs font-bold uppercase tracking-wide" style={{color:TC}}>360 ONE</th>
+      <th className="py-2 px-3 text-right text-xs font-bold uppercase tracking-wide" style={{color:NC}}>Nuvama</th>
+    </tr></thead><tbody>
+      {tbl.map((r,i)=><tr key={i} className={`border-b border-gray-50 hover:bg-gray-50 ${i%2===0?"":"bg-gray-50/40"}`}><td className={tl2}>{r.l}</td><td className={tc} style={{color:MC}}>{r.m}</td><td className={tc} style={{color:TC}}>{r.t}</td><td className={tc} style={{color:NC}}>{r.n}</td></tr>)}
+    </tbody></table></div>
+  </Card>
+  <Sec title="AM Revenue & AUM Trend" sub="FY24–FY26E progression">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Card><CT>AM Revenue Trend (₹ Cr)</CT><CW><BarChart data={am}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mRev" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mRev")}</Bar><Bar dataKey="tRev" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("tRev")}</Bar><Bar dataKey="nRev" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("nRev")}</Bar></BarChart></CW></Card>
+      <Card><CT>AM AUM Trend (₹ Cr)</CT><CW><BarChart data={am}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mAUM" name="MOFSL" fill={M2} radius={[3,3,0,0]}>{bl("mAUM",undefined,20000)}</Bar><Bar dataKey="tAUM" name="360 ONE" fill={T2} radius={[3,3,0,0]}>{bl("tAUM",undefined,20000)}</Bar><Bar dataKey="nAUM" name="Nuvama" fill={N2} radius={[3,3,0,0]}>{bl("nAUM",undefined,5000)}</Bar></BarChart></CW></Card>
+    </div>
+  </Sec>
   <Card className="bg-blue-50/50 border-blue-100"><p className="text-xs text-gray-600"><strong>Note:</strong> AM is essentially all ARR (management fees). MOFSL AMC "Other" includes lending book income (₹865 Cr book) growing rapidly. Nuvama AM is early-stage (₹12.6K Cr), loss-making. 360ONE AM (₹99K Cr) focuses on PMS/AIF.</p></Card>
 </div>};
 
 // ═══ CM TAB ═══
-const CMTab=()=><div className="space-y-6">
+const CMTab=()=>{
+  const cmRevD=[
+    {m:"Revenue",mo:cm[2].mRev,t:null,n:cm[2].nTotal},
+    {m:"PAT / PBT",mo:cm[2].mPAT,t:null,n:cm[2].nPBT},
+  ];
+  const tbl=[
+    {l:"Revenue (₹Cr)",m:fmt(cm[2].mRev,0),t:"No CM Segment",n:fmt(cm[2].nTotal,0)},
+    {l:"PAT / PBT (₹Cr)",m:fmt(cm[2].mPAT,0),t:"—",n:fmt(cm[2].nPBT,0)},
+    {l:"PAT Margin",m:pct(cm[2].mPAT/cm[2].mRev*100),t:"—",n:pct(cm[2].nPBT/cm[2].nTotal*100)},
+    {l:"Revenue Mix",m:"IB + Inst Broking (TBR)",t:"—",n:`AS ₹${fmt(cm[2].nAS,0)} + CM ₹${fmt(cm[2].nCM,0)}`},
+    {l:"Revenue Type",m:"Primarily TBR",t:"—",n:"AS (semi-ARR) + CM (TBR)"},
+  ];
+  const tc="py-2 px-3 text-right font-semibold text-sm",tl2="py-2 px-3 text-left text-gray-700 text-sm";
+  return<div className="space-y-6">
+  <CoLegend/>
   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
     <KPI label="MOFSL CM FY26E" value={`₹${fmt(cm[2].mRev,0)} Cr`} sub="IB + Broking (TBR)" color={MC}/>
+    <KPI label="360 ONE CM" value="No Segment" sub="Focus on wealth / AM" color={TC}/>
     <KPI label="Nuvama AS+CM FY26E" value={`₹${fmt(cm[2].nTotal,0)} Cr`} sub="AS (semi-ARR) + CM (TBR)" color={NC}/>
-    <KPI label="MOFSL CM PAT" value={`₹${fmt(cm[2].mPAT,0)} Cr`} color={MC}/>
-    <KPI label="Nuvama AS+CM PBT" value={`₹${fmt(cm[2].nPBT,0)} Cr`} color={NC}/>
+    <KPI label="Nuvama AS+CM PBT" value={`₹${fmt(cm[2].nPBT,0)} Cr`} sub={`${pct(cm[2].nPBT/cm[2].nTotal*100)} margin`} color={NC}/>
   </div>
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Card><CT>Capital Markets Revenue (₹ Cr)</CT><CW><BarChart data={cm}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mRev" name="MOFSL CM" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="nTotal" name="Nuvama AS+CM" fill={NC} radius={[3,3,0,0]}/></BarChart></CW></Card>
-    <Card><CT>Nuvama AS vs CM (₹ Cr)</CT><CW><BarChart data={cm}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="nAS" name="Asset Services (semi-ARR)" fill={AR} stackId="a"/><Bar dataKey="nCM" name="Capital Markets (TBR)" fill={TB} stackId="a" radius={[3,3,0,0]}/></BarChart></CW></Card>
+    <Card><CT>Capital Markets — Revenue &amp; PAT (FY26E, ₹ Cr)</CT><CW h={280}><BarChart data={cmRevD} margin={{bottom:15}}>{G}<XAxis dataKey="m" tick={{fontSize:10}}/><YAxis {...yL}/>{T}<Legend wrapperStyle={{fontSize:10}}/><Bar dataKey="mo" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mo",undefined,50)}</Bar><Bar dataKey="n" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("n",undefined,50)}</Bar></BarChart></CW></Card>
+    <Card><CT>Nuvama AS vs CM Split — Trend (₹ Cr)</CT><CW h={280}><BarChart data={cm}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="nAS" name="Asset Services (semi-ARR)" fill={AR} stackId="a">{bl("nAS",undefined,200)}</Bar><Bar dataKey="nCM" name="Capital Markets (TBR)" fill={TB} stackId="a" radius={[3,3,0,0]}>{bl("nCM",undefined,200)}</Bar></BarChart></CW></Card>
   </div>
-  <Card className="bg-purple-50/50 border-purple-100"><p className="text-xs text-gray-600"><strong>Note:</strong> MOFSL CM is predominantly TBR (institutional broking + IB). Nuvama AS+CM includes Asset Services (₹701 Cr, semi-recurring custody/clearing) and Capital Markets (₹637 Cr, TBR). 360 ONE has no separate CM segment.</p></Card>
-</div>;
-
-// ═══ ARR / TBR & RETENTION TAB ═══
-const ARRTab=()=>{
-  const tc="py-2 px-2 text-right",tl="py-2 px-2 text-left";
-  const combARR=wth.map((w,i)=>{const a=am[i];const mA=w.mARR+a.mARR,nA=w.nARR+a.nARR,tA=w.tARR+a.tARR;return{fy:w.fy,mPct:+(mA/(w.mRev+a.mRev)*100).toFixed(1),nPct:+(nA/(w.nRev+a.nRev)*100).toFixed(1),tPct:+(tA/(w.tRev+a.tRev)*100).toFixed(1)}});
-  return<div className="space-y-6">
-  <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
-    <KPI label="MOFSL Wealth ARR%" value={`${arrPct[2].mPct}%`} sub={`₹${fmt(wth[2].mARR,0)} Cr`} color={MC}/>
-    <KPI label="Nuvama Wealth ARR%" value={`${arrPct[2].nPct}%`} sub={`₹${fmt(wth[2].nARR,0)} Cr`} color={NC}/>
-    <KPI label="360ONE Wealth ARR%" value={`${arrPct[2].tPct}%`} sub={`₹${fmt(wth[2].tARR,0)} Cr`} color={TC}/>
-    <KPI label="MOFSL ARR Ret." value={`${arrAUM[2].mRet}%`} sub={`on ₹${fmt(arrAUM[2].mAvg,0)} Cr`} color={MC}/>
-    <KPI label="360ONE ARR Ret." value={`${arrAUM[2].tRet}%`} sub={`on ₹${fmt(arrAUM[2].tAvg/1000,0)}K Cr`} color={TC}/>
-    <KPI label="Nuvama Pvt Ret." value={`${arrAUM[2].nPvtRet}%`} sub={`on ₹${fmt(arrAUM[2].nPvt,0)} Cr`} color={NC}/>
-  </div>
-
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Card><CT>Wealth+AM ARR % Trend</CT><CW><ComposedChart data={combARR}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[30,80]}/>{T}{L}<Line dataKey="mPct" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPct" name="Nuvama" stroke={NC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tPct" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
-    <Card><CT>ARR Retention / Take Rate (%)</CT><CW><ComposedChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[0,3.5]}/>{T}{L}<Line dataKey="mRet" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tRet" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPvtRet" name="Nuvama Pvt" stroke={NC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
-  </div>
-
-  <Sec title="ARR AUM, Lending Book & Retention" sub="Avg ARR AUM from databooks; Retention = ARR Revenue ÷ Avg ARR AUM">
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card><CT>Avg ARR AUM (₹ Cr)</CT><CW><BarChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mAvg" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="tAvg" name="360 ONE" fill={TC} radius={[3,3,0,0]}/><Bar dataKey="nPvt" name="Nuvama Pvt" fill={NC} radius={[3,3,0,0]}/></BarChart></CW></Card>
-      <Card><CT>Lending Book within ARR AUM (₹ Cr)</CT><CW><BarChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mLend" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="tLend" name="360 ONE" fill={TC} radius={[3,3,0,0]}/><Bar dataKey="nLoan" name="Nuvama (consol)" fill={NC} radius={[3,3,0,0]}/></BarChart></CW></Card>
-    </div>
-    <Card><div className="overflow-x-auto"><table className="w-full text-xs">
-      <thead><tr className="border-b-2 border-gray-800">
-        <th className={tl+" font-bold w-[20%]"}>Metric</th>
-        <th className={tc} style={{color:MC}} colSpan={3}>MOFSL (WM+PWM)</th>
-        <th className={tc} style={{color:TC}} colSpan={3}>360 ONE Wealth</th>
-        <th className={tc} style={{color:NC}} colSpan={3}>Nuvama (Pvt only)</th>
-      </tr>
-      <tr className="border-b border-gray-200 text-gray-500"><th className={tl}></th>{["FY24","FY25","FY26E","FY24","FY25","FY26E","FY24","FY25","FY26E"].map((f,i)=><th key={i} className={tc}>{f}</th>)}</tr></thead>
-      <tbody>
-        <tr className="border-b border-gray-50 bg-gray-50/30"><td className={tl+" font-semibold"}>Avg ARR AUM</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-semibold"} style={{color:MC}}>{fmt(r.mAvg,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-semibold"} style={{color:TC}}>{fmt(r.tAvg,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" font-semibold"} style={{color:NC}}>{fmt(r.nPvt,0)}</td>)}</tr>
-        <tr className="border-b border-gray-50"><td className={tl}>Lending Book</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc}>{fmt(r.mLend,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc}>{fmt(r.tLend,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc}>{fmt(r.nLoan,0)}</td>)}</tr>
-        <tr className="border-b border-gray-50"><td className={tl}>ARR AUM ex-Lending</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-semibold"}>{fmt(r.mExL,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-semibold"}>{fmt(r.tExL,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" text-gray-400"}>—</td>)}</tr>
-        <tr className="border-b border-gray-50 bg-purple-50/30"><td className={tl+" font-semibold"}>ARR Revenue</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-bold"} style={{color:AR}}>{fmt(r.mRev,0)}</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-bold"} style={{color:AR}}>{fmt(r.tRev,0)}</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" font-bold"} style={{color:AR}}>{fmt(r.nPvtRev,0)}</td>)}</tr>
-        <tr className="border-b border-gray-50 bg-amber-50/30"><td className={tl+" font-semibold"}>Retention (%)</td>{arrAUM.map((r,i)=><td key={`m${i}`} className={tc+" font-bold"} style={{color:MC}}>{r.mRet}%</td>)}{arrAUM.map((r,i)=><td key={`t${i}`} className={tc+" font-bold"} style={{color:TC}}>{r.tRet}%</td>)}{arrAUM.map((r,i)=><td key={`n${i}`} className={tc+" font-bold"} style={{color:NC}}>{r.nPvtRet}%</td>)}</tr>
-      </tbody>
-    </table></div></Card>
+  <Card><CT>Capital Markets — Peer Comparison (FY26E)</CT>
+    <div className="overflow-x-auto"><table className="w-full"><thead><tr className="border-b-2 border-gray-200">
+      <th className="py-2 px-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wide w-[38%]">Metric</th>
+      <th className="py-2 px-3 text-right text-xs font-bold uppercase tracking-wide" style={{color:MC}}>MOFSL</th>
+      <th className="py-2 px-3 text-right text-xs font-bold uppercase tracking-wide" style={{color:TC}}>360 ONE</th>
+      <th className="py-2 px-3 text-right text-xs font-bold uppercase tracking-wide" style={{color:NC}}>Nuvama</th>
+    </tr></thead><tbody>
+      {tbl.map((r,i)=><tr key={i} className={`border-b border-gray-50 hover:bg-gray-50 ${i%2===0?"":"bg-gray-50/40"}`}><td className={tl2}>{r.l}</td><td className={tc} style={{color:MC}}>{r.m}</td><td className={tc} style={{color:TC}}>{r.t}</td><td className={tc} style={{color:NC}}>{r.n}</td></tr>)}
+    </tbody></table></div>
+  </Card>
+  <Sec title="Capital Markets Revenue Trend" sub="FY24–FY26E">
+    <Card><CT>CM Revenue Trend (₹ Cr)</CT><CW h={240}><BarChart data={cm}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mRev" name="MOFSL CM" fill={MC} radius={[3,3,0,0]}>{bl("mRev")}</Bar><Bar dataKey="nTotal" name="Nuvama AS+CM" fill={NC} radius={[3,3,0,0]}>{bl("nTotal")}</Bar></BarChart></CW></Card>
   </Sec>
-
-  <Card className="bg-amber-50/50 border-amber-100"><p className="text-xs text-gray-600"><strong>Notes:</strong> MOFSL retention ~2.5-2.8% reflects higher-yielding dist trail + lending NII on smaller ARR AUM base (₹67K Cr). 360ONE at ~0.75% on ₹1.9L Cr — reflects lower-yield advisory/dist model on much larger managed assets. Nuvama only reports ARR AUM for Private segment. Lending book is embedded in ARR AUM for all — "ex-Lending" shows pure fee-earning managed/distribution AUM.</p></Card>
+  <Card className="bg-purple-50/50 border-purple-100"><p className="text-xs text-gray-600"><strong>Note:</strong> MOFSL CM is predominantly TBR (institutional broking + IB). Nuvama AS+CM: Asset Services (₹701 Cr, semi-recurring custody/clearing) and Capital Markets (₹637 Cr, TBR). 360 ONE has no separate CM segment — all revenues classified under Wealth and AM.</p></Card>
 </div>};
+
+// ═══ REVENUE BRIDGE / WATERFALL TAB ═══
+const WaterfallTab = () => {
+  const WFC={arr:"#8b5cf6",nii:"#06b6d4",tbr:"#f59e0b",oth:"#94a3b8",tot:"#1e40af"};
+  const buildWF=segs=>{let c=0;const r=segs.map(s=>{const row={...s,off:c};c+=s.val;return row;});r.push({name:"Total",val:c,off:0,color:WFC.tot});return r;};
+  const mWF=buildWF([{name:"Dist Trail (ARR)",val:wComp[2].mDist,color:WFC.arr},{name:"NII / Spread",val:wComp[2].mNII,color:WFC.nii},{name:"Brokerage (TBR)",val:wComp[2].mBrok,color:WFC.tbr},{name:"Other",val:wComp[2].mOth,color:WFC.oth}]);
+  const nWF=buildWF([{name:"Mgd Prod (ARR)",val:wComp[2].nMgd,color:WFC.arr},{name:"NII / Spread",val:wComp[2].nNII,color:WFC.nii},{name:"Broking+Trans (TBR)",val:wComp[2].nBrok,color:WFC.tbr},{name:"Other",val:wComp[2].nOth,color:WFC.oth}]);
+  const tWF=buildWF([{name:"ARR (Plus+Dist+NII)",val:wComp[2].tARR,color:WFC.arr},{name:"TBR / Brokerage",val:wComp[2].tBrok,color:WFC.tbr},{name:"Other Income",val:wComp[2].tOth,color:WFC.oth}]);
+  const WF=({data,title})=><Card><CT>{title}</CT><CW h={300}><BarChart data={data} barSize={52} margin={{bottom:50}}>{G}<XAxis dataKey="name" tick={{fontSize:9}} angle={-28} textAnchor="end" interval={0} height={65}/><YAxis {...yL}/>{T}<Bar dataKey="off" stackId="a" fill="transparent" legendType="none"/><Bar dataKey="val" stackId="a" name="₹ Cr" radius={[3,3,0,0]}>{data.map((d,i)=><Cell key={i} fill={d.color}/>)}{bl("val",undefined,100)}</Bar></BarChart></CW></Card>;
+  const niiD=wComp.map(w=>({fy:w.fy,mNII:w.mNII,nNII:w.nNII}));
+  const tbrD=wComp.map(w=>({fy:w.fy,mBrok:w.mBrok,nBrok:w.nBrok,tBrok:w.tBrok}));
+  const arrD=wComp.map(w=>({fy:w.fy,mDist:w.mDist,nMgd:w.nMgd,tARR:w.tARR}));
+  const othD=wComp.map(w=>({fy:w.fy,mOth:w.mOth,nOth:w.nOth,tOth:w.tOth}));
+  return<div className="space-y-6">
+    <Sec title="Revenue Bridge — FY26E Wealth Segment" sub="Waterfall from zero to total; each bar = incremental revenue layer (₹ Cr)">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4"><WF data={mWF} title="MOFSL (WM + PWM)"/><WF data={nWF} title="Nuvama (Wealth + Private)"/><WF data={tWF} title="360 ONE Wealth"/></div>
+      <Card className="mt-3 bg-slate-50/60 border-slate-200"><div className="flex flex-wrap gap-5 text-xs text-gray-600 py-1">{[[`ARR / Distribution trail / Managed product fees`,WFC.arr],[`NII / Spread / Interest income (lending book)`,WFC.nii],[`TBR / Brokerage — transaction-based, market-linked`,WFC.tbr],[`Other income — Delphi, PMS advisory, misc`,WFC.oth],[`Total revenue`,WFC.tot]].map(([l,c])=><span key={c}><span className="inline-block w-3 h-3 rounded mr-1 align-middle" style={{background:c}}></span>{l}</span>)}</div></Card>
+    </Sec>
+
+    <Sec title="① ARR Revenue — Distribution Trail & Managed Product Fees" sub="Recurring AUM-linked income; Retention = ARR Rev ÷ ARR AUM ex-Lending">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+        <KPI label="MOFSL Dist ARR" value={`₹${fmt(wComp[2].mDist,0)} Cr`} sub={`${(wComp[2].mDist/wth[2].mRev*100).toFixed(0)}% wealth rev`} color={MC}/>
+        <KPI label="MOFSL ARR AUM" value={`₹${fmt(arrAUM[2].mExL,0)} Cr`} sub={`ex-lend; ret ${arrAUM[2].mRet}%`} color={MC}/>
+        <KPI label="360ONE ARR Rev" value={`₹${fmt(wComp[2].tARR,0)} Cr`} sub={`${(wComp[2].tARR/wth[2].tRev*100).toFixed(0)}% wealth rev`} color={TC}/>
+        <KPI label="360ONE ARR AUM" value={`₹${fmt(arrAUM[2].tExL/1000,1)}K Cr`} sub={`ex-lend; ret ${arrAUM[2].tRet}%`} color={TC}/>
+        <KPI label="Nuvama Mgd Prod" value={`₹${fmt(wComp[2].nMgd,0)} Cr`} sub={`${(wComp[2].nMgd/wth[2].nRev*100).toFixed(0)}% wealth rev`} color={NC}/>
+        <KPI label="Nuvama Pvt AUM" value={`₹${fmt(arrAUM[2].nExL,0)} Cr`} sub={`ex-lend; ret ${arrAUM[2].nPvtRet}%`} color={NC}/>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card><CT>ARR / Distribution Revenue (₹ Cr)</CT><CW h={240}><BarChart data={arrD}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mDist" name="MOFSL Dist Trail" fill={MC} radius={[3,3,0,0]}>{bl("mDist")}</Bar><Bar dataKey="nMgd" name="Nuvama Mgd Prod" fill={NC} radius={[3,3,0,0]}>{bl("nMgd")}</Bar><Bar dataKey="tARR" name="360ONE ARR" fill={TC} radius={[3,3,0,0]}>{bl("tARR")}</Bar></BarChart></CW></Card>
+        <Card><CT>ARR Retention Rate — Dist Rev ÷ ARR AUM ex-Lend (%)</CT><CW h={240}><ComposedChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[0,4]}/>{T}{L}<Line dataKey="mRet" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tRet" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPvtRet" name="Nuvama Pvt" stroke={NC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
+      </div>
+      <Card className="bg-purple-50/50 border-purple-100"><p className="text-xs text-gray-600"><strong>ARR context:</strong> MOFSL (₹948 Cr dist trail) on ₹58,987 Cr ARR AUM — yield declining as AUM scale outpaces trail rate compression (3.32%→2.83%). 360ONE (₹1,482 Cr ARR) on ₹1.83L Cr ARR AUM (~0.81% retention) — advisory/Plus-series, very high AUM but low take rate; ARR bundles distribution, Plus-product fees and NII (not separately reported). Nuvama Managed Products (₹850 Cr) = MPIS + Private Mgd Products on ₹42,591 Cr — ~0.99% retention improving.</p></Card>
+    </Sec>
+
+    <Sec title="② TBR / Brokerage Revenue" sub="Transaction-based, equity market-linked — lower-quality, cyclical">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+        <KPI label="MOFSL Brokerage" value={`₹${fmt(wComp[2].mBrok,0)} Cr`} sub={`${(wComp[2].mBrok/wth[2].mRev*100).toFixed(0)}% of wealth rev`} trend="down" color={MC}/>
+        <KPI label="MOFSL Brok YoY" value={yoy(wComp[2].mBrok,wComp[1].mBrok)} sub="FY25→FY26E" trend="down" color={MC}/>
+        <KPI label="Nuvama Broking" value={`₹${fmt(wComp[2].nBrok,0)} Cr`} sub={`${(wComp[2].nBrok/wth[2].nRev*100).toFixed(0)}% of wealth rev`} color={NC}/>
+        <KPI label="Nuvama Brok YoY" value={yoy(wComp[2].nBrok,wComp[1].nBrok)} sub="FY25→FY26E" color={NC}/>
+        <KPI label="360ONE TBR" value={`₹${fmt(wComp[2].tBrok,0)} Cr`} sub={`${(wComp[2].tBrok/wth[2].tRev*100).toFixed(0)}% of wealth rev`} color={TC}/>
+        <KPI label="MOFSL TBR shift" value={`${brokPct[0].mPct}% → ${brokPct[2].mPct}%`} sub="FY24→FY26E (structural ↓)" trend="down" color={MC}/>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card><CT>Brokerage / TBR Revenue (₹ Cr)</CT><CW h={240}><BarChart data={tbrD}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mBrok" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mBrok")}</Bar><Bar dataKey="nBrok" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("nBrok")}</Bar><Bar dataKey="tBrok" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("tBrok")}</Bar></BarChart></CW></Card>
+        <Card><CT>TBR as % of Wealth Revenue (%)</CT><CW h={240}><ComposedChart data={brokPct}>{G}<XAxis {...xFY}/><YAxis {...yL} unit="%" domain={[0,55]}/>{T}{L}<Line dataKey="mPct" name="MOFSL" stroke={MC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="nPct" name="Nuvama" stroke={NC} strokeWidth={2.5} dot={{r:4}}/><Line dataKey="tPct" name="360 ONE" stroke={TC} strokeWidth={2.5} dot={{r:4}}/></ComposedChart></CW></Card>
+      </div>
+      <Card className="bg-amber-50/50 border-amber-100"><p className="text-xs text-gray-600"><strong>TBR context:</strong> MOFSL: Retail brokerage declining as % (44%→30% FY24→FY26E) — structural re-rating catalyst as ARR mix grows. Large retail franchise; est. ADTO ~₹600–700 Cr/day across WM+CM, ~1.5% retail equity market share. Nuvama TBR: HNI/ultra-HNI brokerage + transactional advisory (~24% of wealth rev), stable. 360ONE TBR (~31%): primarily HNI transactional/advisory execution; company targeting further ARR shift. All three are seeing market-share pressure from Zerodha/Groww in retail broking.</p></Card>
+    </Sec>
+
+    <Sec title="③ NII / Interest Income — Lending Spread" sub="Margin lending, ESOP financing, LAS; lending book embedded within ARR AUM">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+        <KPI label="MOFSL NII" value={`₹${fmt(wComp[2].mNII,0)} Cr`} sub={`${(wComp[2].mNII/wth[2].mRev*100).toFixed(0)}% wealth rev`} color={MC}/>
+        <KPI label="MOFSL Lend Book" value={`₹${fmt(arrAUM[2].mLend,0)} Cr`} sub={`Yield ~${(wComp[2].mNII/arrAUM[2].mLend*100).toFixed(1)}% on book`} color={MC}/>
+        <KPI label="Nuvama NII" value={`₹${fmt(wComp[2].nNII,0)} Cr`} sub={`${(wComp[2].nNII/wth[2].nRev*100).toFixed(0)}% wealth rev`} color={NC}/>
+        <KPI label="Nuvama Lend Book" value={`₹${fmt(arrAUM[2].nLoan,0)} Cr`} sub={`~${(wComp[2].nNII/arrAUM[2].nLoan*100).toFixed(1)}% NII/book`} color={NC}/>
+        <KPI label="360ONE Lend Book" value={`₹${fmt(arrAUM[2].tLend,0)} Cr`} sub="NII bundled in ARR" color={TC}/>
+        <KPI label="MOFSL NII YoY" value={yoy(wComp[2].mNII,wComp[1].mNII)} sub="FY25→FY26E" trend="up" color={MC}/>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card><CT>NII / Interest Income Trend (₹ Cr)</CT><CW h={240}><BarChart data={niiD}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mNII" name="MOFSL NII" fill={MC} radius={[3,3,0,0]}>{bl("mNII")}</Bar><Bar dataKey="nNII" name="Nuvama NII" fill={NC} radius={[3,3,0,0]}>{bl("nNII")}</Bar></BarChart></CW></Card>
+        <Card><CT>Lending Book (₹ Cr)</CT><CW h={240}><BarChart data={arrAUM}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mLend" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mLend")}</Bar><Bar dataKey="tLend" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("tLend")}</Bar><Bar dataKey="nLoan" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("nLoan")}</Bar></BarChart></CW></Card>
+      </div>
+      <Card className="bg-cyan-50/50 border-cyan-100"><p className="text-xs text-gray-600"><strong>NII context:</strong> MOFSL NII (₹1,253 Cr) = margin lending + ESOP financing on ₹8,461 Cr book — gross yield ~14.8% (high-yield secured against equity). Nuvama NII (₹293 Cr) on ₹6,979 Cr consol. loan book — ~4.2% reflects blended rate on structured/lower-yield lending mix. 360ONE does not separately report NII — lending income (₹9,564 Cr book) is bundled inside ARR, making it the largest lending book of the three but invisibly embedded in ARR numbers. NII is high-quality recurring income that grows with AUM.</p></Card>
+    </Sec>
+
+    <Sec title="④ Other Income" sub="Advisory platform fees, PMS management, Delphi, structured products distribution, misc">
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <KPI label="MOFSL Other" value={`₹${fmt(wComp[2].mOth,0)} Cr`} sub="Delphi + PMS advisory fees" color={MC}/>
+        <KPI label="Nuvama Other" value={`₹${fmt(wComp[2].nOth,0)} Cr`} sub="GIFT City + Private misc" color={NC}/>
+        <KPI label="360ONE Other" value={`₹${fmt(wComp[2].tOth,0)} Cr`} sub="Structured + tech / misc fees" color={TC}/>
+      </div>
+      <Card><CT>Other Income Trend (₹ Cr)</CT><CW h={220}><BarChart data={othD}>{G}<XAxis {...xFY}/><YAxis {...yL}/>{T}{L}<Bar dataKey="mOth" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("mOth")}</Bar><Bar dataKey="nOth" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("nOth")}</Bar><Bar dataKey="tOth" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("tOth")}</Bar></BarChart></CW></Card>
+      <Card className="bg-gray-50/50 border-gray-200 mt-3"><p className="text-xs text-gray-600"><strong>Other income breakdown:</strong> MOFSL (₹143 Cr): Delphi advisory platform fees (HNI digital advisory) + PMS management fees routed through WM/PWM. Nuvama (₹119 Cr): GIFT City operations + custody/processing income + miscellaneous Private segment fees. 360ONE (₹135 Cr): structured products distribution fees, technology/platform fees, and miscellaneous advisory income — growing as product platform expands.</p></Card>
+    </Sec>
+  </div>;
+};
 
 // ═══ SCORECARD ═══
 const ScoreTab=()=>{
@@ -222,30 +350,33 @@ const ScoreTab=()=>{
   const mPB=val.mMc/con[2].mNW,nPB=val.nMc/con[2].nNW,tPB=val.tMc/con[2].tNW;
   const mTA=wth[2].mAUM+am[2].mAUM,nTA=wth[2].nAUM+am[2].nAUM+120302,tTA=wth[2].tAUM+am[2].tAUM;
   const mAR=wth[2].mARR+am[2].mARR,nAR=wth[2].nARR+am[2].nARR,tAR=wth[2].tARR+am[2].tARR;
+  const mTA1=wth[1].mAUM+am[1].mAUM,nTA1=wth[1].nAUM+am[1].nAUM+120302,tTA1=wth[1].tAUM+am[1].tAUM;
+  const mAR1=wth[1].mARR+am[1].mARR,nAR1=wth[1].nARR+am[1].nARR,tAR1=wth[1].tARR+am[1].tARR;
+  const gC=(v,g)=><>{v}{g!=null&&<div className={`text-[10px] font-normal mt-0.5 ${g>=0?"text-emerald-600":"text-red-500"}`}>{g>=0?"▲":"▼"} {Math.abs(g).toFixed(1)}%</div>}</>;
   const rows=[
     {cat:"Scale",items:[
-      {l:"Revenue FY26E",m:fmt(con[2].mRev,0),n:fmt(con[2].nRev,0),t:fmt(con[2].tRev,0)},
-      {l:"Op PAT FY26E",m:fmt(con[2].mOP,0),n:fmt(con[2].nOP,0),t:fmt(con[2].tOP,0)},
-      {l:"Net Worth",m:fmt(con[2].mNW,0),n:fmt(con[2].nNW,0),t:fmt(con[2].tNW,0)},
-      {l:"Total AUM",m:fmt(mTA,0),n:fmt(nTA,0),t:fmt(tTA,0)},
+      {l:"Revenue FY26E",m:gC(fmt(con[2].mRev,0),calcYoY(con[2].mRev,con[1].mRev)),n:gC(fmt(con[2].nRev,0),calcYoY(con[2].nRev,con[1].nRev)),t:gC(fmt(con[2].tRev,0),calcYoY(con[2].tRev,con[1].tRev))},
+      {l:"Op PAT FY26E",m:gC(fmt(con[2].mOP,0),calcYoY(con[2].mOP,con[1].mOP)),n:gC(fmt(con[2].nOP,0),calcYoY(con[2].nOP,con[1].nOP)),t:gC(fmt(con[2].tOP,0),calcYoY(con[2].tOP,con[1].tOP))},
+      {l:"Net Worth",m:gC(fmt(con[2].mNW,0),calcYoY(con[2].mNW,con[1].mNW)),n:gC(fmt(con[2].nNW,0),calcYoY(con[2].nNW,con[1].nNW)),t:gC(fmt(con[2].tNW,0),calcYoY(con[2].tNW,con[1].tNW))},
+      {l:"Total AUM",m:gC(fmt(mTA,0),calcYoY(mTA,mTA1)),n:gC(fmt(nTA,0),calcYoY(nTA,nTA1)),t:gC(fmt(tTA,0),calcYoY(tTA,tTA1))},
     ]},
     {cat:"Wealth Platform",items:[
-      {l:"Wealth Revenue",m:fmt(wth[2].mRev,0),n:fmt(wth[2].nRev,0),t:fmt(wth[2].tRev,0)},
-      {l:"Wealth AUM",m:fmt(wth[2].mAUM,0),n:fmt(wth[2].nAUM,0),t:fmt(wth[2].tAUM,0)},
-      {l:"Wealth ARR",m:fmt(wth[2].mARR,0),n:fmt(wth[2].nARR,0),t:fmt(wth[2].tARR,0)},
-      {l:"Wealth Broking",m:fmt(wComp[2].mBrok,0),n:fmt(wComp[2].nBrok,0),t:fmt(wComp[2].tBrok,0)},
+      {l:"Wealth Revenue",m:gC(fmt(wth[2].mRev,0),calcYoY(wth[2].mRev,wth[1].mRev)),n:gC(fmt(wth[2].nRev,0),calcYoY(wth[2].nRev,wth[1].nRev)),t:gC(fmt(wth[2].tRev,0),calcYoY(wth[2].tRev,wth[1].tRev))},
+      {l:"Wealth AUM",m:gC(fmt(wth[2].mAUM,0),calcYoY(wth[2].mAUM,wth[1].mAUM)),n:gC(fmt(wth[2].nAUM,0),calcYoY(wth[2].nAUM,wth[1].nAUM)),t:gC(fmt(wth[2].tAUM,0),calcYoY(wth[2].tAUM,wth[1].tAUM))},
+      {l:"Wealth ARR",m:gC(fmt(wth[2].mARR,0),calcYoY(wth[2].mARR,wth[1].mARR)),n:gC(fmt(wth[2].nARR,0),calcYoY(wth[2].nARR,wth[1].nARR)),t:gC(fmt(wth[2].tARR,0),calcYoY(wth[2].tARR,wth[1].tARR))},
+      {l:"Wealth Broking",m:gC(fmt(wComp[2].mBrok,0),calcYoY(wComp[2].mBrok,wComp[1].mBrok)),n:gC(fmt(wComp[2].nBrok,0),calcYoY(wComp[2].nBrok,wComp[1].nBrok)),t:gC(fmt(wComp[2].tBrok,0),calcYoY(wComp[2].tBrok,wComp[1].tBrok))},
       {l:"ARR %",m:`${arrPct[2].mPct}%`,n:`${arrPct[2].nPct}%`,t:`${arrPct[2].tPct}%`},
       {l:"Broking %",m:`${brokPct[2].mPct}%`,n:`${brokPct[2].nPct}%`,t:`${brokPct[2].tPct}%`},
       {l:"Yield on AUM (FY25)",m:"0.89%",n:"0.53%",t:"0.45%"},
     ]},
     {cat:"Asset Mgmt",items:[
-      {l:"AM Revenue",m:fmt(am[2].mRev,0),n:fmt(am[2].nRev,0),t:fmt(am[2].tRev,0)},
-      {l:"AM ARR",m:fmt(am[2].mARR,0),n:fmt(am[2].nARR,0),t:fmt(am[2].tARR,0)},
-      {l:"AM AUM",m:fmt(am[2].mAUM,0),n:fmt(am[2].nAUM,0),t:fmt(am[2].tAUM,0)},
+      {l:"AM Revenue",m:gC(fmt(am[2].mRev,0),calcYoY(am[2].mRev,am[1].mRev)),n:gC(fmt(am[2].nRev,0),calcYoY(am[2].nRev,am[1].nRev)),t:gC(fmt(am[2].tRev,0),calcYoY(am[2].tRev,am[1].tRev))},
+      {l:"AM ARR",m:gC(fmt(am[2].mARR,0),calcYoY(am[2].mARR,am[1].mARR)),n:gC(fmt(am[2].nARR,0),calcYoY(am[2].nARR,am[1].nARR)),t:gC(fmt(am[2].tARR,0),calcYoY(am[2].tARR,am[1].tARR))},
+      {l:"AM AUM",m:gC(fmt(am[2].mAUM,0),calcYoY(am[2].mAUM,am[1].mAUM)),n:gC(fmt(am[2].nAUM,0),calcYoY(am[2].nAUM,am[1].nAUM)),t:gC(fmt(am[2].tAUM,0),calcYoY(am[2].tAUM,am[1].tAUM))},
     ]},
     {cat:"ARR Quality",items:[
-      {l:"Total ARR (W+AM)",m:fmt(mAR,0),n:fmt(nAR,0),t:fmt(tAR,0)},
-      {l:"Avg ARR AUM",m:fmt(arrAUM[2].mAvg,0),n:`${fmt(arrAUM[2].nPvt,0)} (Pvt)`,t:fmt(arrAUM[2].tAvg,0)},
+      {l:"Total ARR (W+AM)",m:gC(fmt(mAR,0),calcYoY(mAR,mAR1)),n:gC(fmt(nAR,0),calcYoY(nAR,nAR1)),t:gC(fmt(tAR,0),calcYoY(tAR,tAR1))},
+      {l:"ARR AUM ex-Lending",m:fmt(arrAUM[2].mExL,0),n:`${fmt(arrAUM[2].nExL,0)} (Pvt)`,t:fmt(arrAUM[2].tExL,0)},
       {l:"ARR Retention",m:`${arrAUM[2].mRet}%`,n:`${arrAUM[2].nPvtRet}% (Pvt)`,t:`${arrAUM[2].tRet}%`},
       {l:"Mcap / Total ARR",m:`${(val.mMc/mAR).toFixed(1)}x`,n:`${(val.nMc/nAR).toFixed(1)}x`,t:`${(val.tMc/tAR).toFixed(1)}x`},
     ]},
@@ -276,16 +407,16 @@ const ScoreTab=()=>{
       </Fragment>)}
     </tbody></table></div></Card>
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <Card><CT>P/OpPAT</CT><CW h={200}><BarChart data={[{m:mPE,n:nPE,t:tPE,label:"P/E"}]}>{G}<XAxis dataKey="label" tick={{fontSize:11}}/><YAxis {...yL} unit="x"/>{T}{L}<Bar dataKey="m" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="n" name="Nuvama" fill={NC} radius={[3,3,0,0]}/><Bar dataKey="t" name="360 ONE" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
-      <Card><CT>Mcap/ARR (x)</CT><CW h={200}><BarChart data={[{m:val.mMc/mAR,n:val.nMc/nAR,t:val.tMc/tAR,label:"Mcap/ARR"}]}>{G}<XAxis dataKey="label" tick={{fontSize:11}}/><YAxis {...yL} unit="x"/>{T}{L}<Bar dataKey="m" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="n" name="Nuvama" fill={NC} radius={[3,3,0,0]}/><Bar dataKey="t" name="360 ONE" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
-      <Card><CT>Mcap/AUM (%)</CT><CW h={200}><BarChart data={[{m:val.mMc/mTA*100,n:val.nMc/nTA*100,t:val.tMc/tTA*100,label:"%"}]}>{G}<XAxis dataKey="label" tick={{fontSize:11}}/><YAxis {...yL} unit="%"/>{T}{L}<Bar dataKey="m" name="MOFSL" fill={MC} radius={[3,3,0,0]}/><Bar dataKey="n" name="Nuvama" fill={NC} radius={[3,3,0,0]}/><Bar dataKey="t" name="360 ONE" fill={TC} radius={[3,3,0,0]}/></BarChart></CW></Card>
+      <Card><CT>P/OpPAT</CT><CW h={200}><BarChart data={[{m:mPE,n:nPE,t:tPE,label:"P/E"}]}>{G}<XAxis dataKey="label" tick={{fontSize:11}}/><YAxis {...yL} unit="x"/>{T}{L}<Bar dataKey="m" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("m",undefined,1)}</Bar><Bar dataKey="n" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("n",undefined,1)}</Bar><Bar dataKey="t" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("t",undefined,1)}</Bar></BarChart></CW></Card>
+      <Card><CT>Mcap/ARR (x)</CT><CW h={200}><BarChart data={[{m:val.mMc/mAR,n:val.nMc/nAR,t:val.tMc/tAR,label:"Mcap/ARR"}]}>{G}<XAxis dataKey="label" tick={{fontSize:11}}/><YAxis {...yL} unit="x"/>{T}{L}<Bar dataKey="m" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("m",undefined,1)}</Bar><Bar dataKey="n" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("n",undefined,1)}</Bar><Bar dataKey="t" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("t",undefined,1)}</Bar></BarChart></CW></Card>
+      <Card><CT>Mcap/AUM (%)</CT><CW h={200}><BarChart data={[{m:val.mMc/mTA*100,n:val.nMc/nTA*100,t:val.tMc/tTA*100,label:"%"}]}>{G}<XAxis dataKey="label" tick={{fontSize:11}}/><YAxis {...yL} unit="%"/>{T}{L}<Bar dataKey="m" name="MOFSL" fill={MC} radius={[3,3,0,0]}>{bl("m",undefined,1)}</Bar><Bar dataKey="n" name="Nuvama" fill={NC} radius={[3,3,0,0]}>{bl("n",undefined,1)}</Bar><Bar dataKey="t" name="360 ONE" fill={TC} radius={[3,3,0,0]}>{bl("t",undefined,1)}</Bar></BarChart></CW></Card>
     </div>
     <Card className="bg-gray-50/50 border-gray-200"><p className="text-xs text-gray-500"><strong>Definitions:</strong> MOFSL Rev = Net Revenue (post direct costs); Nuvama = Adjusted Mgmt Rev; 360ONE = Total Rev incl other income. MOFSL OpPAT excl treasury. Nuvama OpPAT excl associates/exceptional. 360ONE OpPAT = OpPBT × 0.75. Broking% = Brokerage+Transactional ÷ Wealth Rev. ARR Retention = ARR Rev ÷ Avg ARR AUM. CMPs approximate.</p></Card>
   </div>
 };
 
 // ═══ MAIN ═══
-const TABS=[{id:"overview",label:"Overview"},{id:"wealth",label:"Wealth"},{id:"am",label:"Asset Mgmt"},{id:"cm",label:"Capital Mkt"},{id:"arrtbr",label:"ARR / TBR"},{id:"score",label:"Scorecard"}];
+const TABS=[{id:"overview",label:"Overview"},{id:"wealth",label:"Wealth"},{id:"am",label:"Asset Mgmt"},{id:"cm",label:"Capital Mkt"},{id:"revbridge",label:"Rev Bridge"},{id:"score",label:"Scorecard"}];
 export default function Dashboard(){
   const[tab,setTab]=useState("wealth");
   return<div className="min-h-screen bg-gray-50">
@@ -297,7 +428,7 @@ export default function Dashboard(){
     </div>
     <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10"><div className="max-w-7xl mx-auto px-6 flex gap-0.5 overflow-x-auto">{TABS.map(t=><button key={t.id} onClick={()=>setTab(t.id)} className={`px-4 py-3 text-sm font-semibold border-b-[3px] transition-colors whitespace-nowrap ${tab===t.id?"border-purple-600 text-purple-700 bg-purple-50/60":"border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>{t.label}</button>)}</div></div>
     <div className="max-w-7xl mx-auto px-6 py-6">
-      {tab==="overview"&&<Overview/>}{tab==="wealth"&&<WealthTab/>}{tab==="am"&&<AMTab/>}{tab==="cm"&&<CMTab/>}{tab==="arrtbr"&&<ARRTab/>}{tab==="score"&&<ScoreTab/>}
+      {tab==="overview"&&<Overview/>}{tab==="wealth"&&<WealthTab/>}{tab==="am"&&<AMTab/>}{tab==="cm"&&<CMTab/>}{tab==="revbridge"&&<WaterfallTab/>}{tab==="score"&&<ScoreTab/>}
     </div>
   </div>;
 }
